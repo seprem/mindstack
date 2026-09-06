@@ -22,7 +22,7 @@ python3 -m http.server 8000
 | `dsa-cheatsheet.html` | DSA one-day sheet |
 | `dsa.html` | Pattern roadmap + LeetCode questions |
 | `dsa-data.js` | Shared DSA content |
-| `lld.html` | LLD notes + practice (OOP, SOLID, patterns, machine coding) |
+| `lld.html` | LLD notes + practice (OOP, concurrency, patterns, machine coding) |
 | `lld-data.js` | Shared LLD content |
 | `hld.html` | HLD (coming soon) |
 | `hr.html` | HR (coming soon) |

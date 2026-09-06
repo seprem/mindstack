@@ -4,23 +4,29 @@
 const LLD = [
 
   /* ===================== OVERVIEW ===================== */
-  { n: "Overview", h: "LLD is how you turn a feature into classes, APIs, and code. HLD is what the system does at scale; LLD is how one service is built.", c: [
-    { n: "What is LLD",
-      note: "<b>Low-Level Design</b> is the detailed design of a component/module: classes, methods, interactions, error handling, and thread-safety. Output of an LLD round: requirements, class diagram, public APIs, and a working (or sketched) implementation.<br><b>HLD</b> answers scale/storage/consistency. <b>LLD</b> answers entities, relationships, and what varies.",
+  { n: "Overview", h: "Three intro cards: what LLD is, how to approach a problem, and interview tips. HLD is what the system does at scale; LLD is how one service is built.", c: [
+    { n: "What is Low Level System Design?",
+      note: "<b>Low-Level Design</b> is the detailed design of a component/module: classes, methods, interactions, error handling, and thread-safety. Output of an LLD round: requirements, class diagram, public APIs, and a working (or sketched) implementation.<br><b>HLD</b> = services, DBs, caches, scale. <b>LLD</b> = entities, relationships, what varies, and code.<br>Machine coding = LLD + you type a compiling solution in 60–90 min.",
       p: [
         ["GFG", "https://www.geeksforgeeks.org/system-design/what-is-low-level-design-or-lld-learn-system-design/", "What is LLD?", "E"],
         ["HI", "https://www.hellointerview.com/learn/low-level-design/in-a-hurry/introduction", "Hello Interview — LLD intro", "E"],
         ["EDU", "https://www.educative.io/blog/frequently-asked-design-patterns-in-low-level-design-interviews", "Frequently asked LLD patterns", "M"],
       ]},
-    { n: "Interview 45-min flow",
+    { n: "How to Approach LLD Problems?",
       h: "Do not dump patterns. Name a pattern only when it removes a real coupling.",
-      note: "<b>1. Clarify (5 min):</b> actors, scope, in/out of scope (multi-floor parking? multiple elevators?).<br><b>2. Requirements (5):</b> 3–5 functional + 1–2 non-functional (thread-safe park/unpark).<br><b>3. Entities (8):</b> nouns → classes. IS-A vs HAS-A. Prefer composition.<br><b>4. APIs (7):</b> public methods + return types + errors.<br><b>5. Patterns + code (15):</b> what varies? pricing → Strategy; creation → Factory; events → Observer; lifecycle → State. At most 1–2 patterns.<br><b>6. Trace (5):</b> walk one happy path and one edge.",
+      note: "<b>1. Clarify (5 min):</b> actors, scope, in/out of scope (multi-floor parking? multiple elevators?).<br><b>2. Requirements (5):</b> 3–5 functional + 1–2 non-functional (thread-safe park/unpark).<br><b>3. Entities (8):</b> nouns → classes. IS-A vs HAS-A. Prefer composition.<br><b>4. APIs (7):</b> public methods + return types + errors.<br><b>5. Patterns + code (15):</b> what varies? pricing → Strategy; creation → Factory; events → Observer; lifecycle → State. At most 1–2 patterns.<br><b>6. Trace (5):</b> walk one happy path and one edge (full lot, double-book seat).",
       p: [
         ["HI", "https://www.hellointerview.com/learn/low-level-design/in-a-hurry/patterns", "When to use which pattern", "M"],
         ["EDU", "https://www.educative.io/courses/grokking-the-low-level-design-interview-using-ood-principles", "Grokking LLD (OOD)", "M"],
       ]},
+    { n: "LLD Interview Tips",
+      note: "<b>Talk while you design</b> — silence looks like stuck.<br><b>Start concrete:</b> 1 parking lot, 1 movie hall — then extend.<br><b>Write APIs first</b> so the interviewer can steer you.<br><b>Thread-safety:</b> say what you lock (the spot / the seat map), not “I'll add synchronized everywhere.”<br><b>YAGNI:</b> no Kafka, no microservice split, unless asked.<br><b>Trade-offs:</b> inheritance vs composition, mutex vs concurrent map, lock whole cache vs per-key.<br><b>Test aloud:</b> two users book the last seat; cache get after eviction.",
+      p: [
+        ["HI", "https://www.hellointerview.com/learn/low-level-design/in-a-hurry/introduction", "LLD interview framing", "M"],
+        ["GFG", "https://www.geeksforgeeks.org/system-design/how-to-answer-a-system-design-interview-problem/", "How to answer a design problem", "M"],
+      ]},
     { n: "Map of this sheet",
-      note: "<pre style='font-size:.8rem;line-height:1.45;overflow:auto'>LLD\n├── OOP — Encapsulation, Inheritance, Polymorphism, Abstraction, Decorators\n├── UML — class / sequence sketches\n├── Principles — SOLID, DRY, KISS, YAGNI, Clean Code 6\n├── Patterns — Creational · Structural · Behavioral\n├── Machine coding — Parking Lot, Elevator, Vending, Splitwise…\n└── LeetCode Design — LRU, MinStack, Twitter, Trie…</pre>",
+      note: "<pre style='font-size:.8rem;line-height:1.45;overflow:auto'>LLD\n├── Overview — what / approach / tips\n├── OOP — classes, relationships, constructors, this, 4 pillars, generics, access\n├── Concurrency — ZeroEvenOdd, FizzBuzz, BBQueue, Philosophers, Crawler\n├── LLD + Concurrency — tickets, cache, Kafka pub-sub, rate limiter\n├── UML · SOLID · patterns\n├── Machine coding — Parking Lot, Elevator, Vending, Splitwise…\n└── LeetCode Design — LRU, MinStack, Twitter, Trie…</pre>",
       p: [
         ["LIST", "https://leetcode.com/problem-list/design/", "LeetCode Design problem list", "M"],
         ["GFG", "https://www.geeksforgeeks.org/system-design/low-level-design-problems/", "GFG LLD problems", "M"],
@@ -28,9 +34,86 @@ const LLD = [
   ]},
 
   /* ===================== OOP ===================== */
-  { n: "OOP", h: "Four pillars plus Python decorators. Interviewers want them applied in a Parking Lot / Notification Service, not recited.", c: [
+  { n: "OOP", h: "Classes, relationships, constructors, this/self, the four pillars, generics, and access modifiers. Apply them in a Parking Lot — don't just recite.", c: [
+    { n: "Introduction to Classes and Objects",
+      note: "A <b>class</b> is the blueprint; an <b>object</b> is one instance in memory. Class = fields + methods + constructors. Object has <b>identity</b> (address), <b>state</b> (field values), <b>behavior</b> (methods).<br><code>Car</code> is the class; <code>my_car = Car(\"KA-01\")</code> is an object. Many objects share the same class, each with its own state.",
+      code:
+`class Car:
+    wheels = 4                          # class attribute (shared)
+    def __init__(self, plate):
+        self.plate = plate              # instance attribute
+c1, c2 = Car("KA-01"), Car("KA-02")
+c1.plate, c2.plate, Car.wheels          # 'KA-01', 'KA-02', 4`,
+      p: [
+        ["GFG", "https://www.geeksforgeeks.org/python-classes-and-objects/", "Classes and objects (Python)", "E"],
+        ["GFG", "https://www.geeksforgeeks.org/classes-objects-java/", "Classes and objects (Java)", "E"],
+      ]},
+    { n: "Class Relationships : A Deep Dive",
+      note: "<b>Association</b> — uses-a (Teacher ↔ Student).<br><b>Aggregation</b> — has-a, part can live alone (Department has Professors).<br><b>Composition</b> — has-a, part dies with whole (House has Rooms). Strongest coupling.<br><b>Inheritance / generalization</b> — is-a (Car is a Vehicle).<br><b>Realization</b> — class implements an interface.<br><b>Dependency</b> — uses momentarily (method arg).<br>Interview default: <b>prefer composition over inheritance</b>.",
+      p: [
+        ["GFG", "https://www.geeksforgeeks.org/association-composition-aggregation-java/", "Association, aggregation, composition", "E"],
+        ["GFG", "https://www.geeksforgeeks.org/unified-modeling-language-uml-class-diagrams/", "UML class relationships", "E"],
+      ]},
+    { n: "Constructor and It's types",
+      note: "A constructor runs when you create an object — sets initial state. Types: <b>default</b> (no args), <b>parameterized</b>, <b>copy</b> (clone fields), <b>chaining</b> (<code>this()</code> / <code>super()</code>).<br>Python: only <code>__init__</code>; chain with <code>super().__init__(...)</code>. Java: same name as class, no return type, can overload.",
+      code:
+`class Ticket:
+    def __init__(self, spot, vehicle, hours=1):   # parameterized + default
+        self.spot, self.vehicle, self.hours = spot, vehicle, hours
+    @classmethod
+    def from_ticket(cls, other):                  # copy-style factory
+        return cls(other.spot, other.vehicle, other.hours)`,
+      p: [
+        ["GFG", "https://www.geeksforgeeks.org/constructors-in-python/", "Constructors in Python", "E"],
+        ["GFG", "https://www.geeksforgeeks.org/constructors-in-java/", "Constructors in Java", "E"],
+      ]},
+    { n: "This Keyword in OOPS",
+      note: "<b>Java <code>this</code></b> = current object. Uses: disambiguate fields (<code>this.x = x</code>), call another constructor (<code>this(args)</code>), pass yourself (<code>observer.subscribe(this)</code>).<br><b>Python <code>self</code></b> is the same idea — first param of instance methods, not a keyword. <code>cls</code> is the class in <code>@classmethod</code>. Never skip <code>self</code> on instance methods.",
+      code:
+`class User:
+    def __init__(self, name):
+        self.name = name                 # self ≈ Java this
+    def rename(self, name):
+        self.name = name                 # field, not the arg
+    def greet(self, other):
+        return f"{self.name} hi {other.name}"`,
+      p: [
+        ["GFG", "https://www.geeksforgeeks.org/this-reference-in-java/", "this in Java", "E"],
+        ["GFG", "https://www.geeksforgeeks.org/self-in-python-class/", "self in Python", "E"],
+      ]},
+    { n: "Polymorphism and It's Types",
+      note: "<b>Compile-time (overloading):</b> same name, different params. Java yes; Python ≈ default args / <code>*args</code>.<br><b>Runtime (overriding):</b> child replaces parent method. <i>This</i> is the LLD one — <code>Notification.send()</code> is email vs SMS.<br><b>Parametric:</b> generics (see below). Dynamic dispatch = which override runs is decided at runtime from the actual object type.",
+      code:
+`class Notification:
+    def send(self, msg): raise NotImplementedError
+class Email(Notification):
+    def send(self, msg): return f"email: {msg}"
+class SMS(Notification):
+    def send(self, msg): return f"sms: {msg}"
+def blast(notifs, msg):
+    return [n.send(msg) for n in notifs]   # runtime polymorphism`,
+      p: [
+        ["GFG", "https://www.geeksforgeeks.org/polymorphism-in-python/", "Polymorphism in Python", "M"],
+        ["GFG", "https://www.geeksforgeeks.org/polymorphism-in-java/", "Polymorphism in Java", "M"],
+      ]},
+    { n: "Inheritance and It's types",
+      note: "<b>Single</b> — one parent (Java classes). <b>Multilevel</b> — A←B←C. <b>Hierarchical</b> — one parent, many children (Vehicle ← Car/Bike). <b>Multiple</b> — many parents (Python yes; Java via interfaces). <b>Hybrid</b> — mix.<br>Use for true IS-A. Deep trees break LSP. Prefer composition for “has a behavior.”",
+      code:
+`class Vehicle:
+    def __init__(self, plate, spots): self.plate, self.spots = plate, spots
+class Motorcycle(Vehicle):
+    def __init__(self, plate): super().__init__(plate, 1)
+class Car(Vehicle):
+    def __init__(self, plate): super().__init__(plate, 1)
+class Bus(Vehicle):
+    def __init__(self, plate): super().__init__(plate, 5)`,
+      p: [
+        [1603, "design-parking-system", "Design Parking System", "E"],
+        ["GFG", "https://www.geeksforgeeks.org/types-of-inheritance-python/", "Inheritance types (Python)", "M"],
+        ["GFG", "https://www.geeksforgeeks.org/inheritance-in-java/", "Inheritance in Java", "M"],
+      ]},
     { n: "Encapsulation",
-      note: "<b>Bundle data + methods; hide internals.</b> Callers use methods, not raw fields. Protects invariants (a balance cannot go negative except via <code>withdraw</code>).<br>Python: prefix internals with <code>_</code>; use <code>@property</code> for controlled access.",
+      note: "<b>Bundle data + methods; hide internals.</b> Callers use methods, not raw fields. Protects invariants (a balance cannot go negative except via <code>withdraw</code>).<br>Python: prefix internals with <code>_</code>; use <code>@property</code>. Java: <code>private</code> fields + getters/setters only when needed.",
       code:
 `class BankAccount:
     def __init__(self, balance=0):
@@ -47,39 +130,10 @@ const LLD = [
       p: [
         [2043, "simple-bank-system", "Simple Bank System", "M"],
         [1797, "design-authentication-manager", "Design Authentication Manager", "M"],
-        ["GFG", "https://www.geeksforgeeks.org/encapsulation-in-python/", "Encapsulation in Python", "E"],
-      ]},
-    { n: "Inheritance",
-      note: "<b>IS-A:</b> a class reuses / specializes another. Use for true specialization (<code>Car</code> is a <code>Vehicle</code>), not for code sharing — that is composition.<br>Deep hierarchies break LSP. Prefer <b>composition over inheritance</b>.",
-      code:
-`class Vehicle:
-    def __init__(self, plate, spots): self.plate, self.spots = plate, spots
-class Motorcycle(Vehicle):
-    def __init__(self, plate): super().__init__(plate, 1)
-class Car(Vehicle):
-    def __init__(self, plate): super().__init__(plate, 1)
-class Bus(Vehicle):
-    def __init__(self, plate): super().__init__(plate, 5)`,
-      p: [
-        [1603, "design-parking-system", "Design Parking System", "E"],
-        ["GFG", "https://www.geeksforgeeks.org/inheritance-in-python/", "Inheritance in Python", "E"],
-      ]},
-    { n: "Polymorphism",
-      note: "<b>Same interface, different behavior.</b> Overriding (runtime) is the interview one: call <code>send()</code> on a <code>Notification</code> and get email vs SMS. Overloading (compile-time, same name / different args) is weaker in Python (use defaults / <code>*args</code>).",
-      code:
-`class Notification:
-    def send(self, msg): raise NotImplementedError
-class Email(Notification):
-    def send(self, msg): return f"email: {msg}"
-class SMS(Notification):
-    def send(self, msg): return f"sms: {msg}"
-def blast(notifs, msg):
-    return [n.send(msg) for n in notifs]   # same call, many forms`,
-      p: [
-        ["GFG", "https://www.geeksforgeeks.org/polymorphism-in-python/", "Polymorphism in Python", "E"],
+        ["GFG", "https://www.geeksforgeeks.org/encapsulation-in-python/", "Encapsulation in Python", "M"],
       ]},
     { n: "Abstraction",
-      note: "<b>Expose the contract, hide the engine.</b> Abstract base classes / interfaces define <i>what</i>; subclasses define <i>how</i>. High-level code depends on the abstraction (this is also DIP).",
+      note: "<b>Expose the contract, hide the engine.</b> Abstract classes / interfaces define <i>what</i>; subclasses define <i>how</i>. Java: <code>abstract class</code> / <code>interface</code>. Python: <code>ABC</code> + <code>@abstractmethod</code>. High-level code depends on the abstraction (DIP).",
       code:
 `from abc import ABC, abstractmethod
 class PaymentProcessor(ABC):
@@ -87,10 +141,39 @@ class PaymentProcessor(ABC):
     def pay(self, amount: float) -> bool: ...
 class StripeProcessor(PaymentProcessor):
     def pay(self, amount):
-        # talk to Stripe; caller never sees HTTP
-        return True`,
+        return True                      # caller never sees HTTP`,
       p: [
-        ["GFG", "https://www.geeksforgeeks.org/abstract-classes-in-python/", "Abstract classes in Python", "E"],
+        ["GFG", "https://www.geeksforgeeks.org/abstract-classes-in-python/", "Abstract classes in Python", "M"],
+        ["GFG", "https://www.geeksforgeeks.org/abstraction-in-java/", "Abstraction in Java", "M"],
+      ]},
+    { n: "Generics and Wildcards",
+      note: "<b>Generics</b> = type parameters so a class/method works for many types without casts. Java: <code>List&lt;T&gt;</code>, <code>Cache&lt;K,V&gt;</code>. Python: <code>Generic[T]</code>, <code>TypeVar</code>.<br><b>Wildcards (Java):</b> <code>? extends T</code> (producer — get, PECS), <code>? super T</code> (consumer — put). <code>List&lt;?&gt;</code> is read-as-Object. Interview: a parking <code>Spot&lt;T extends Vehicle&gt;</code> should not accept a raw <code>Object</code>.",
+      code:
+`from typing import Generic, TypeVar
+K = TypeVar("K"); V = TypeVar("V")
+class Cache(Generic[K, V]):
+    def __init__(self): self._m: dict[K, V] = {}
+    def put(self, k: K, v: V): self._m[k] = v
+    def get(self, k: K) -> V | None: return self._m.get(k)
+c = Cache[str, int](); c.put("ttl", 60)`,
+      p: [
+        ["GFG", "https://www.geeksforgeeks.org/generics-in-java/", "Generics in Java", "M"],
+        ["GFG", "https://www.geeksforgeeks.org/wildcards-in-java/", "Wildcards in Java", "M"],
+        [146, "lru-cache", "LRU Cache (typed K,V)", "M"],
+      ]},
+    { n: "Access Modifiers",
+      note: "<b>Java:</b> <code>private</code> (class), default / package (same package), <code>protected</code> (package + subclasses), <code>public</code> (everywhere).<br><b>Python:</b> convention only — <code>name</code> public, <code>_name</code> internal, <code>__name</code> name-mangled. Nothing is truly private.<br>LLD: keep fields private; expose a small public API (the facade).",
+      code:
+`class Spot:
+    def __init__(self, size):
+        self._size = size                # protected-by-convention
+        self.__occupied = False          # mangled: _Spot__occupied
+    def park(self): self.__occupied = True
+    def free(self): self.__occupied = False
+    def is_free(self): return not self.__occupied`,
+      p: [
+        ["GFG", "https://www.geeksforgeeks.org/access-modifiers-java/", "Access modifiers (Java)", "E"],
+        ["GFG", "https://www.geeksforgeeks.org/access-modifiers-in-python-public-private-and-protected/", "Access modifiers (Python)", "E"],
       ]},
     { n: "Python Decorators",
       h: "A decorator is a function that wraps another — the language-level Decorator pattern. Interview: logging, timing, retry, auth.",
@@ -112,6 +195,183 @@ def work(n):
       p: [
         [146, "lru-cache", "LRU Cache (see also functools.lru_cache)", "M"],
         ["GFG", "https://www.geeksforgeeks.org/decorators-in-python/", "Decorators in Python", "E"],
+      ]},
+  ]},
+
+  /* ===================== CONCURRENCY ===================== */
+  { n: "Concurrency", h: "Coordinate threads: locks, conditions, semaphores. Print-in-order problems train the muscle you need for a thread-safe cache or booking system.", c: [
+    { n: "Tools in 30 seconds",
+      note: "<b>Lock / mutex</b> — one thread in the critical section.<br><b>Condition</b> — wait until a predicate (queue not empty).<br><b>Semaphore(n)</b> — n permits (capacity, or “your turn”).<br><b>Barrier</b> — wait until k threads arrive.<br>Python: <code>threading.Lock</code>, <code>Condition</code>, <code>Semaphore</code>. Java: <code>synchronized</code>, <code>ReentrantLock</code>, <code>Semaphore</code>. Always unlock in <code>finally</code>.",
+      p: [
+        [1114, "print-in-order", "Print in Order", "E"],
+        [1115, "print-foobar-alternately", "Print FooBar Alternately", "M"],
+        ["GFG", "https://www.geeksforgeeks.org/multithreading-python-set-1/", "Multithreading in Python", "M"],
+      ]},
+    { n: "Print Zero Even Odd",
+      note: "Three threads: <code>zero</code> prints 0s, <code>even</code> even numbers, <code>odd</code> odds → <code>010203…</code> of length 2n. <b>Idea:</b> three semaphores. Zero starts with 1 permit; after printing 0 it releases odd or even; that thread prints the number and releases zero.",
+      code:
+`from threading import Semaphore
+class ZeroEvenOdd:
+    def __init__(self, n):
+        self.n = n
+        self.z, self.e, self.o = Semaphore(1), Semaphore(0), Semaphore(0)
+    def zero(self, printNumber):
+        for i in range(1, self.n + 1):
+            self.z.acquire(); printNumber(0)
+            (self.o if i % 2 else self.e).release()
+    def even(self, printNumber):
+        for i in range(2, self.n + 1, 2):
+            self.e.acquire(); printNumber(i); self.z.release()
+    def odd(self, printNumber):
+        for i in range(1, self.n + 1, 2):
+            self.o.acquire(); printNumber(i); self.z.release()`,
+      p: [
+        [1116, "print-zero-even-odd", "Print Zero Even Odd", "M"],
+      ]},
+    { n: "Fizz Buzz Multithreaded",
+      note: "Four threads: fizz (÷3), buzz (÷5), fizzbuzz (÷15), number (else). Same trick as ZeroEvenOdd — four semaphores, or one lock + condition + a <code>turn</code> counter. After each print, bump <code>i</code> and notify all; each thread waits until <code>i</code> matches its rule.",
+      code:
+`from threading import Semaphore
+class FizzBuzz:
+    def __init__(self, n):
+        self.n = n
+        self.f = Semaphore(0); self.b = Semaphore(0)
+        self.fb = Semaphore(0); self.num = Semaphore(1)
+    def _step(self, i):
+        if i == self.n: return
+        i += 1
+        if i % 15 == 0: self.fb.release()
+        elif i % 3 == 0: self.f.release()
+        elif i % 5 == 0: self.b.release()
+        else: self.num.release()
+    # fizz/buzz/fizzbuzz/number: acquire own sem, print, _step(i)`,
+      p: [
+        [1195, "fizz-buzz-multithreaded", "Fizz Buzz Multithreaded", "M"],
+      ]},
+    { n: "Design Bounded Blocking Queue",
+      note: "<b>enqueue</b> blocks when full; <b>dequeue</b> blocks when empty. Capacity is the bound (thread pool work queue, producer-consumer).<br><b>Two semaphores:</b> empty slots + filled slots, plus a mutex around the deque. Or one mutex + two conditions (<code>not_full</code>, <code>not_empty</code>).",
+      code:
+`from collections import deque
+from threading import Condition
+class BoundedBlockingQueue:
+    def __init__(self, capacity):
+        self.cap, self.q, self.cv = capacity, deque(), Condition()
+    def enqueue(self, x):
+        with self.cv:
+            while len(self.q) == self.cap: self.cv.wait()
+            self.q.append(x); self.cv.notify_all()
+    def dequeue(self):
+        with self.cv:
+            while not self.q: self.cv.wait()
+            x = self.q.popleft(); self.cv.notify_all(); return x
+    def size(self):
+        with self.cv: return len(self.q)`,
+      p: [
+        [1188, "design-bounded-blocking-queue", "Design Bounded Blocking Queue", "M"],
+        ["GFG", "https://www.geeksforgeeks.org/producer-consumer-problem-using-semaphores-set-1/", "Producer–consumer", "M"],
+      ]},
+    { n: "The Dining Philosophers",
+      note: "n philosophers, n forks. Each needs two forks to eat. Naive “pick left then right” <b>deadlocks</b> if all pick left together.<br><b>Fixes:</b> (1) last philosopher picks right-first (break the cycle). (2) allow at most n-1 eaters (semaphore). (3) lock both forks atomically by ordered ids. Interview: name deadlock, starvation, and which fix you picked.",
+      code:
+`from threading import Lock
+class DiningPhilosophers:
+    def __init__(self):
+        self.forks = [Lock() for _ in range(5)]
+    def wants_to_eat(self, i, pick_left, pick_right, eat, put_left, put_right):
+        a, b = i, (i + 1) % 5
+        if a > b: a, b = b, a          # global order → no cycle
+        with self.forks[a], self.forks[b]:
+            pick_left(); pick_right(); eat(); put_left(); put_right()`,
+      p: [
+        [1226, "the-dining-philosophers", "The Dining Philosophers", "H"],
+        ["GFG", "https://www.geeksforgeeks.org/dining-philosopher-problem-using-semaphores/", "Dining Philosophers", "H"],
+      ]},
+    { n: "Multithreaded Web Crawler",
+      note: "Start from a URL, fetch, extract same-host links, crawl until exhausted. <b>Shared:</b> visited set (lock or concurrent set), queue of URLs, thread pool.<br>Don't fetch a URL twice. Join all workers. Host filter is part of the problem (stay on start hostname).",
+      code:
+`from concurrent.futures import ThreadPoolExecutor, as_completed
+from threading import Lock
+def crawl(start, htmlParser):
+    host = start.split("/")[2]; seen, lock = {start}, Lock()
+    def visit(url):
+        nxt = []
+        for u in htmlParser.getUrls(url):
+            if u.split("/")[2] != host: continue
+            with lock:
+                if u not in seen: seen.add(u); nxt.append(u)
+        return nxt
+    q = [start]
+    with ThreadPoolExecutor(8) as pool:
+        while q:
+            found = []
+            for fut in as_completed([pool.submit(visit, u) for u in q]):
+                found += fut.result()
+            q = found
+    return list(seen)`,
+      p: [
+        [1242, "web-crawler-multithreaded", "Web Crawler Multithreaded", "H"],
+        [1236, "web-crawler", "Web Crawler (single thread)", "M"],
+      ]},
+  ]},
+
+  /* ===================== LLD + CONCURRENCY ===================== */
+  { n: "LLD + Concurrency", h: "Full designs where correctness depends on locks: seats, caches, pub-sub, rate limits. Entities first, then say exactly what you synchronize.", c: [
+    { n: "Design Movie Ticket Booking System",
+      note: "<b>Entities:</b> City, Cinema, Hall, Movie, Show, Seat, User, Booking, Payment.<br><b>Seat states:</b> FREE → LOCKED (TTL 2–5 min) → BOOKED. Never skip LOCKED — two users clicking the same seat is the whole interview.<br><b>Concurrency:</b> lock per-show seat map (or per-seat). Lock must expire or a crash holds seats forever. Unique booking id, idempotent pay webhook.<br><b>Patterns:</b> State (seat), Facade (BookingService), Strategy (pricing / payment).",
+      p: [
+        ["GFG", "https://www.geeksforgeeks.org/system-design/design-bookmyshow-movie-ticket-booking-system/", "Design BookMyShow / movie tickets", "H"],
+        [1603, "design-parking-system", "Design Parking System (toy analog)", "E"],
+      ]},
+    { n: "Design cache",
+      note: "<b>API:</b> <code>get(k)</code>, <code>put(k,v)</code>, optional TTL. <b>Eviction:</b> LRU (map + DLL) is the default; LFU if asked.<br><b>Concurrency:</b> one lock around get/put is correct and what you code first. Upgrade: striped locks / ConcurrentHashMap + per-entry lock. Read-through vs cache-aside (app loads DB on miss).<br>Write-through (sync DB) vs write-back (faster, risk of loss).",
+      code:
+`from collections import OrderedDict
+from threading import Lock
+class LRUCache:
+    def __init__(self, cap):
+        self.cap, self.m, self.lock = cap, OrderedDict(), Lock()
+    def get(self, k):
+        with self.lock:
+            if k not in self.m: return -1
+            self.m.move_to_end(k); return self.m[k]
+    def put(self, k, v):
+        with self.lock:
+            if k in self.m: self.m.move_to_end(k)
+            self.m[k] = v
+            if len(self.m) > self.cap: self.m.popitem(last=False)`,
+      p: [
+        [146, "lru-cache", "LRU Cache", "H"],
+        [460, "lfu-cache", "LFU Cache", "H"],
+        [432, "all-oone-data-structure", "All O`one Data Structure", "H"],
+      ]},
+    { n: "Design Pub-Sub Model like Kafka",
+      note: "<b>Kafka LLD (not full HLD):</b> Producer → Topic → Partitions (append-only log) → Consumer Group (one consumer per partition for ordering).<br><b>Entities:</b> Broker, Topic, Partition, Offset, Producer, Consumer, ConsumerGroup.<br><b>Guarantees:</b> order <i>inside a partition</i> (key hashes to partition). At-least-once = commit offset after process; at-most-once = commit first; exactly-once needs idempotent producer + txn (say it, don't implement).<br><b>Concurrency:</b> single writer per partition (or lock the log); consumers pull independently. Blocking queue between broker I/O and handler threads.",
+      p: [
+        ["GFG", "https://www.geeksforgeeks.org/system-design/kafka-architecture/", "Kafka architecture", "H"],
+        [355, "design-twitter", "Design Twitter (fan-out / observers)", "H"],
+        [1188, "design-bounded-blocking-queue", "Bounded Blocking Queue", "M"],
+      ]},
+    { n: "Design Rate Limiter (LLD)",
+      note: "<b>Token bucket:</b> bucket of size B, refill R tokens/sec. Allow if token available. Smooth bursts. <b>Sliding window log:</b> store timestamps, drop older than window, reject if count ≥ N. <b>Fixed window:</b> simple, burst at boundary.<br><b>Concurrency:</b> lock per-key (user/IP) so two requests don't both see “1 token left.” Distributed: Redis INCR + TTL or Redis token-bucket Lua — mention, don't build.<br>LC 359 is “print at most once per 10s per message.” LC 362 is hits in last 300s.",
+      code:
+`import time
+from threading import Lock
+class TokenBucket:
+    def __init__(self, rate, burst):
+        self.rate, self.burst, self.tokens = rate, burst, burst
+        self.t, self.lock = time.monotonic(), Lock()
+    def allow(self):
+        with self.lock:
+            now = time.monotonic()
+            self.tokens = min(self.burst, self.tokens + (now - self.t) * self.rate)
+            self.t = now
+            if self.tokens < 1: return False
+            self.tokens -= 1; return True`,
+      p: [
+        [359, "logger-rate-limiter", "Logger Rate Limiter", "M"],
+        [362, "design-hit-counter", "Design Hit Counter", "H"],
+        [933, "number-of-recent-calls", "Number of Recent Calls", "M"],
+        ["GFG", "https://www.geeksforgeeks.org/system-design/rate-limiting-system-design/", "Rate limiting (system design)", "H"],
       ]},
   ]},
 
