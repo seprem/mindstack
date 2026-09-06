@@ -38,12 +38,70 @@ const HLD = [
         ["BB", "https://blog.bytebytego.com/p/ep141-a-cheatsheet-on-system-design", "ByteByteGo HLD cheatsheet", "M"],
       ]},
     { n: "How to approach HLD problems",
-      h: "Core property first (what must never be wrong), then access pattern (read vs write heavy), then the diagram.",
-      note: "<b>1. Functional</b> — 3–5 verbs (shorten URL, redirect, analytics).<br><b>2. Non-functional</b> — QPS, p99, consistency, availability.<br><b>3. Capacity</b> — DAU × actions × size. Round numbers (1e8 users, 1 KB, 100:1 read/write).<br><b>4. API</b> — 3–5 endpoints.<br><b>5. High-level diagram</b> — then deep-dive the hard part (feed fanout, unique ID, hot shard).<br><b>Online/offline indicator:</b> core property = freshness vs cost. Access pattern = last-seen write-heavy; presence via heartbeat + Redis TTL.",
+      h: "Two questions before any box: (1) core property — what must never be wrong? (2) access pattern — read-heavy, write-heavy, or bursty? Then walk steps 1→13. In 45 min: 1–5 always; 6–13 as 2–3 deep dives. Data flow = you narrate the arrows, not a separate round.",
+      note: "<b>Time box:</b> requirements + numbers ~8 min · diagram + data flow ~10 min · DB/API/cache ~10 min · scale/fail/security ~10 min · trade-offs + next ~5 min.<br>Start with 1 region / 1 DB. Scale only after the happy path works.",
       p: [
-        ["HI", "https://www.hellointerview.com/learn/system-design/in-a-hurry/delivery", "Interview delivery framework", "M"],
-        ["EDU", "https://www.educative.io/courses/grokking-the-system-design-interview", "Grokking the System Design Interview", "M"],
+        ["HI", "https://www.hellointerview.com/learn/system-design/in-a-hurry/delivery", "Hello Interview — delivery framework", "M"],
         ["GFG", "https://www.geeksforgeeks.org/system-design/how-to-answer-a-system-design-interview-problem/", "How to answer a design problem", "M"],
+        ["EDU", "https://www.educative.io/courses/grokking-the-system-design-interview", "Grokking the System Design Interview", "M"],
+        ["BB", "https://blog.bytebytego.com/p/ep141-a-cheatsheet-on-system-design", "ByteByteGo HLD cheatsheet", "M"],
+      ],
+      c: [
+        { n: "0. Core property + access pattern",
+          note: "<b>Core property</b> — the one thing that must not be wrong even if everything else degrades. Money / seats → strong consistency. Feed / presence / like-count → freshness vs cost, eventual is OK.<br><b>Access pattern</b> — read:write ratio, payload size, burst vs steady, online vs offline.<br><b>Online/offline indicator:</b> core property = freshness vs cost. Access pattern = last-seen is write-heavy; presence = heartbeat + Redis TTL, not a row update per pixel." },
+        { n: "1. Requirements",
+          note: "<b>Functional (3–5 verbs):</b> what a user can do. URL shortener: shorten, redirect, optional analytics. File store: upload, browse folder, download, delete. Say <i>out of scope</i> out loud (no full-text search, no realtime collab) so they can pull it back in.<br><b>Non-functional:</b> latency (p99), availability (nines), consistency, durability, security (authn/z). Pick 2–3 that actually constrain the design — don't recite a textbook list." },
+        { n: "2. Constraints / capacity",
+          note: "Round numbers. DAU × actions/day × size → QPS, storage, bandwidth.<br>1e8 users, 1 KB object, 100:1 read/write is a fine default if they don't give numbers.<br>Write on the board: peak QPS, avg object size, retention, p99 target. These decide cache vs DB, sync vs queue, SQL vs NoSQL — not the logo on the box." },
+        { n: "3. High-level architecture + data flow",
+          h: "Boxes first, then walk two paths out loud: write path and read path. That walk is the data flow.",
+          note: "<b>Diagram (client → CDN → LB → API → cache / DB / blob / queue).</b> Name each box's job in 3 words.<br><b>Data flow</b> is not extra decoration — interviewers ask “what happens when I click upload?” Trace one request: who writes, who notifies, what is sync vs async (queue + worker for thumbnails, virus scan, search index).<br><b>Sync</b> = user waits (auth, metadata, redirect). <b>Async</b> = 202 + worker (transcode, fan-out, email). If you can't narrate the arrows, the diagram is still LLD-in-disguise." },
+        { n: "4. Database",
+          note: "<b>Choice:</b> SQL if relations + transactions (bookings, money). NoSQL if huge write, flexible schema, key-lookup (sessions, timelines). Blob store (S3) for bytes; DB for metadata only — never put 5 GB files in Postgres.<br><b>Schema:</b> 3–6 fields that matter (pk, owner, path, size, created_at). Index the query you actually run (user_id + folder_path), not every column.<br>State the consistency on that table (strong on booking row, eventual on view_count)." },
+        { n: "5. Core components (API, cache, DB, queue)",
+          note: "<b>API:</b> 3–5 endpoints, method + resource + what they return. File store: POST /upload-init, GET /files?path=, GET /download-url, DELETE /files/:id.<br><b>Cache:</b> what key, what TTL, who invalidates (see step 8).<br><b>Queue:</b> only if something is slow or spiky (thumbnails, notifications, search index). Don't add Kafka to a URL shortener.<br><b>Blob / CDN:</b> client uploads/downloads direct to object store via presigned URL — app servers should not proxy gigabytes." },
+        { n: "6. Scalability",
+          note: "Stateless API behind an LB. Horizontal scale app. Autoscale on CPU / QPS / queue lag — not on vibes.<br>Split read replicas if read-heavy. Split services only when a domain needs its own scale (upload vs metadata vs notify).<br>CDN for hot downloads. Connection draining + health checks so deploys don't drop in-flight work." },
+        { n: "7. Partitioning / sharding",
+          note: "Shard key = the lookup you always have (user_id, short_code, device_id). Avoid hot shards (one celebrity user_id) — salt, or isolate whales.<br>Blob keys: prefix with user_id/ so listings and IAM stay local.<br>Cache keys should match the query: files:{user}:{folder}. Rebalancing: consistent hashing or a directory service — mention it, don't design the migrator unless asked." },
+        { n: "8. Caching",
+          note: "Cache the expensive read (folder listing, redirect target, session), not the 5 GB blob (CDN / S3 already is that).<br><b>Policy:</b> cache-aside is the interview default. Write-through if the item is small and always needed.<br><b>Invalidation:</b> on upload/delete, delete that key (and parent folder). TTL as a backstop. Name stampede: lock or jittered TTL.<br>If you can't say how the cache goes stale, don't draw Redis." },
+        { n: "9. Reliability",
+          note: "Replication (multi-AZ). Failover (what if primary DB dies — promote replica, or fail the write?). Timeouts + retries with backoff + idempotency keys on payments/uploads.<br>Queues: DLQ for poison messages. Blob store: checksum + resumable chunks.<br>Say the failure out loud: empty cache, lagging consumer, dead replica." },
+        { n: "10. Security",
+          note: "Authn (who): session / JWT / SSO. Authz (what): object owner, signed URL scoped to one key + short TTL.<br>Don't stream files through the API with a god-mode IAM role. Encrypt in transit (TLS) and at rest. Least privilege from API → DB.<br>Rate-limit public endpoints (redirect is a DDoS magnet)." },
+        { n: "11. Monitoring",
+          note: "Four signals: latency (p99), traffic (QPS), errors (5xx / consumer lag), saturation (CPU, disk, Redis memory).<br>Structured logs + request id. Trace one upload across API → queue → worker.<br>Alert on SLO burn, not on every 4xx. This is also how you prove the design is operable." },
+        { n: "12. Trade-offs",
+          note: "Say two options and pick one. SQL vs NoSQL, push vs pull feed, cache-aside vs write-through, sync metadata vs “S3 event then write DB.”<br>CAP / PACELC: which side on partition. Cost vs p99. Complexity vs team size.<br>A design with no trade-off sounds fake." },
+        { n: "13. Future plans",
+          note: "Close with 3 bullets you'd do next if you had another hour: versioning, sharing ACLs, search index, multi-region, stronger consistency on X.<br>Shows you know the design is a v1, not a religion." },
+        { n: "Worked example: Dropbox-like file store",
+          h: "Same 13 steps. Bytes never go through the API. Metadata is the system; S3 is the disk.",
+          note: "<b>1. Functional:</b> upload to a folder, browse, download via secure link, delete. Out of scope: realtime collab, full-text.<br><b>NFR:</b> metadata p99 &lt; 100ms, durable blobs, authz per file, scale storage independently of API.<br><b>2. Constraints (example):</b> ~50k QPS metadata, files to a few GB, petabyte blobs, 100:1 browse:upload.<br><b>3. Diagram + data flow:</b> Client → API (auth + metadata) → Redis / metadata DB. Client ⇄ blob store (presigned PUT/GET). Blob PUT → queue/worker → write metadata + invalidate cache. That's the whole product.<br><b>4. DB:</b> files table/collection {file_id, user_id, name, folder_path, blob_key, size, created_at, is_folder}. Query: (user_id, folder_path). Blobs not in the DB.<br><b>5. Components:</b> API, auth, blob store, metadata DB, cache, async worker on blob events.<br><b>6–7. Scale / partition:</b> stateless API; blob prefix user_id/; metadata shard/index by user_id.<br><b>8. Cache:</b> listing key files:{user}:{path}; invalidate on upload/delete; TTL backup.<br><b>9–11:</b> multi-AZ DB, worker retries + DLQ, presigned URLs, metrics on upload fail + cache hit ratio.<br><b>12. Trade-offs:</b> presigned upload (cheap, app doesn't see bytes) vs proxy (easier auth, won't scale). SQL metadata (joins, txns) vs document store (flexible path). Eventual metadata after S3 PUT (simple) vs sync write-then-upload (user sees file only when DB is sure).<br><b>13. Next:</b> versions, trash, share links, thumbnails via the same worker.",
+          code:
+`UPLOAD
+  Client → POST /upload-init {folder, name, size}
+  API    → authz, make blob_key = user_id/folder/uuid
+         → return presigned PUT
+  Client → PUT bytes to blob store
+  Store  → event → worker → UPSERT metadata, DEL cache key
+
+BROWSE
+  Client → GET /files?path=/docs/
+  API    → Redis files:{user}:/docs/
+         → miss: query metadata by (user_id, path), fill cache
+         → return names + sizes (not the bytes)
+
+DOWNLOAD
+  Client → GET /download-url?file_id=
+  API    → authz owner, presigned GET, return URL
+  Client → GET bytes from blob / CDN`,
+          p: [
+            ["HI", "https://www.hellointerview.com/learn/system-design/problem-breakdowns/dropbox", "Hello Interview — Dropbox", "H"],
+            ["GFG", "https://www.geeksforgeeks.org/system-design/design-dropbox-a-system-design-interview-question/", "GFG — Design Dropbox", "H"],
+            ["BB", "https://blog.bytebytego.com/p/ep141-a-cheatsheet-on-system-design", "ByteByteGo HLD cheatsheet", "M"],
+          ]},
       ]},
     { n: "HLD Interview Tips",
       note: "Talk while drawing. Start with 1 region / 1 DB, then scale. State trade-offs out loud (SQL vs NoSQL, push vs pull). Don't invent 12 microservices. Name failure: what if the cache is empty, the queue lags, a replica dies. Close with bottlenecks and what you'd do next.",
