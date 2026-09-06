@@ -47,7 +47,7 @@
       background: var(--surface); color: var(--text); font-size: .9rem; outline: none; transition: border-color .15s, box-shadow .15s;
     }
     .search input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-soft); }
-    .search::before { content: "🔍"; position: absolute; left: 12px; top: 50%; transform: translateY(-50%); font-size: .8rem; opacity: .55; }
+    .search::before { content: ""; position: absolute; left: 12px; top: 50%; transform: translateY(-50%); font-size: .8rem; opacity: .55; }
     .btn {
       padding: 9px 14px; border-radius: 10px; border: 1px solid var(--border); background: var(--surface);
       color: var(--text); font-size: .84rem; font-weight: 600; cursor: pointer; white-space: nowrap; text-decoration: none;
@@ -58,10 +58,6 @@
     .wrap { max-width: 980px; margin: 0 auto; padding: 24px 20px; }
     .intro { color: var(--muted); font-size: .95rem; margin-bottom: 18px; line-height: 1.7; }
     .intro strong { color: var(--text); }
-    .progress-bar-wrap { margin: 6px 0 22px; }
-    .progress-track { height: 9px; background: var(--surface-2); border-radius: 99px; overflow: hidden; }
-    .progress-fill { height: 100%; width: 0; background: linear-gradient(90deg, var(--primary), var(--accent)); transition: width .35s ease; }
-    .progress-label { font-size: .82rem; color: var(--muted); margin-top: 7px; font-weight: 500; }
 
     /* Tree */
     details { border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); margin-bottom: 12px; overflow: hidden; box-shadow: var(--shadow-sm); }
@@ -98,9 +94,6 @@
       background: var(--surface); font-size: .86rem; color: var(--text); transition: transform .14s ease, border-color .14s ease, box-shadow .14s ease;
     }
     .prob:hover { transform: translateY(-2px); border-color: var(--primary); box-shadow: var(--shadow-sm); }
-    .prob input { width: 15px; height: 15px; accent-color: var(--primary); cursor: pointer; }
-    .prob.done { opacity: .72; }
-    .prob.done .p-title { text-decoration: line-through; color: var(--muted); }
     .tag { font-family: "JetBrains Mono", monospace; font-size: .66rem; font-weight: 700; padding: 2px 7px; border-radius: 6px; }
     .tag.E { color: var(--e); background: var(--e-bg); }
     .tag.M { color: var(--m); background: var(--m-bg); }
@@ -142,19 +135,15 @@
       <a class="btn" href="dsa-sheet.html">One-day sheet</a>
       <button class="btn" id="expandAll">Expand all</button>
       <button class="btn" id="collapseAll">Collapse all</button>
-      <button class="btn" id="themeToggle">🌙</button>
+      <button class="btn" id="themeToggle">Dark</button>
     </div>
   </header>
 
   <div class="wrap">
     <p class="intro">
       Click a topic to expand. Each pattern lists a curated <strong>Easy</strong>, <strong>Medium</strong>, and <strong>Hard</strong>
-      problem linking directly to LeetCode. Tick a box to mark it solved — progress is saved in your browser.
+      problem linking directly to LeetCode.
     </p>
-    <div class="progress-bar-wrap">
-      <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
-      <div class="progress-label" id="progressLabel">0 / 0 solved</div>
-    </div>
     <div id="tree"></div>
   </div>
 
@@ -168,44 +157,31 @@
     const LC = (slug) => slug.startsWith("http") ? slug : `https://leetcode.com/problems/${slug}/`;
     const $ = (s, r = document) => r.querySelector(s);
 
-    const solved = JSON.parse(localStorage.getItem("dsa-solved") || "{}");
-    let totalProblems = 0;
-
     function problemEl(p) {
-      // p = [num|"GFG"|"AM", slug|url, title, diff]
+      // p = [num|"GFG", slug|url, title, diff]
       const [num, slug, title, diff] = p;
-      totalProblems++;
       const isNum = typeof num === "number";
       const src = isNum ? "" : String(num).toUpperCase();
       const id = isNum ? ("lc" + num) : (src + ":" + slug);
       const srcLabel = isNum ? ("#" + num) : src;
-      const srcCls = src === "AM" ? " am" : src ? " gfg" : "";
+      const srcCls = src ? " gfg" : "";
       const a = document.createElement("a");
-      a.className = "prob" + (solved[id] ? " done" : "");
+      a.className = "prob";
       a.href = LC(slug);
       a.target = "_blank";
       a.rel = "noopener";
       a.dataset.search = (num + " " + title).toLowerCase();
       a.innerHTML =
-        `<input type="checkbox" ${solved[id] ? "checked" : ""} title="Mark solved" />` +
         `<span class="tag ${diff}">${diff}</span>` +
         `<span class="p-num${isNum ? "" : srcCls}">${srcLabel}</span>` +
         `<span class="p-title">${title}</span>`;
-      const cb = a.querySelector("input");
-      cb.addEventListener("click", (e) => {
-        e.preventDefault(); e.stopPropagation();
-        solved[id] = cb.checked;
-        localStorage.setItem("dsa-solved", JSON.stringify(solved));
-        a.classList.toggle("done", cb.checked);
-        updateProgress();
-      });
       return a;
     }
 
     function hintEl(html) {
       const el = document.createElement("div");
       el.className = "hint";
-      el.innerHTML = "💡 " + html;
+      el.innerHTML = html;
       return el;
     }
 
@@ -254,7 +230,7 @@
         const a = document.createElement("a");
         a.className = "study-link";
         a.href = "dsa-notes.html?topic=" + encodeURIComponent(node.n);
-        a.textContent = "📖 Study";
+        a.textContent = "Study";
         a.addEventListener("click", (e) => e.stopPropagation());
         s.appendChild(a);
       }
@@ -270,14 +246,6 @@
     const tree = $("#tree");
     DSA.forEach((topic) => tree.appendChild(nodeEl(topic, 0)));
 
-    /* ---------- progress ---------- */
-    function updateProgress() {
-      const done = Object.values(solved).filter(Boolean).length;
-      const pct = totalProblems ? Math.round((done / totalProblems) * 100) : 0;
-      $("#progressFill").style.width = pct + "%";
-      $("#progressLabel").textContent = `${done} / ${totalProblems} solved · ${pct}%`;
-    }
-    updateProgress();
 
     /* ---------- expand / collapse ---------- */
     $("#expandAll").addEventListener("click", () =>
@@ -319,12 +287,12 @@
     const toggle = $("#themeToggle"), root = document.documentElement;
     const saved = localStorage.getItem("dsa-theme");
     if (saved === "dark" || (!saved && matchMedia("(prefers-color-scheme: dark)").matches)) {
-      root.setAttribute("data-theme", "dark"); toggle.textContent = "☀️";
+      root.setAttribute("data-theme", "dark"); toggle.textContent = "Light";
     }
     toggle.addEventListener("click", () => {
       const dark = root.getAttribute("data-theme") === "dark";
-      if (dark) { root.removeAttribute("data-theme"); toggle.textContent = "🌙"; localStorage.setItem("dsa-theme", "light"); }
-      else { root.setAttribute("data-theme", "dark"); toggle.textContent = "☀️"; localStorage.setItem("dsa-theme", "dark"); }
+      if (dark) { root.removeAttribute("data-theme"); toggle.textContent = "Dark"; localStorage.setItem("dsa-theme", "light"); }
+      else { root.setAttribute("data-theme", "dark"); toggle.textContent = "Light"; localStorage.setItem("dsa-theme", "dark"); }
     });
   </script>
 </body>

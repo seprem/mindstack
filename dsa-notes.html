@@ -40,10 +40,6 @@
     .btn{padding:9px 14px;border-radius:10px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:.85rem;font-weight:600;cursor:pointer;text-decoration:none;transition:border-color .15s,color .15s,transform .15s}
     .btn:hover{border-color:var(--primary);color:var(--primary);transform:translateY(-1px)}
     .menu-btn{display:none;padding:8px 12px;border-radius:10px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:1.05rem;cursor:pointer}
-    .prog{max-width:1160px;margin:0 auto;padding:0 20px 12px}
-    .ptrack{height:8px;background:var(--surface2);border-radius:99px;overflow:hidden}
-    .pfill{height:100%;width:0;background:linear-gradient(90deg,var(--primary),var(--accent));transition:width .35s ease}
-    .plabel{font-size:.78rem;color:var(--muted);margin-top:6px;font-weight:500}
 
     /* Layout: left sidebar + content */
     .layout{max-width:1160px;margin:0 auto;display:flex;gap:28px;padding:0 20px}
@@ -109,14 +105,10 @@
     .probs{display:flex;flex-wrap:wrap;gap:9px}
     .prob{display:inline-flex;align-items:center;gap:9px;text-decoration:none;padding:8px 13px;border-radius:10px;border:1px solid var(--border);background:var(--surface);font-size:.86rem;color:var(--text);transition:transform .14s,border-color .14s,box-shadow .14s}
     .prob:hover{transform:translateY(-2px);border-color:var(--primary);box-shadow:var(--shadow-sm)}
-    .prob input{width:15px;height:15px;accent-color:var(--primary);cursor:pointer}
-    .prob.done{opacity:.72}
-    .prob.done .pt{text-decoration:line-through;color:var(--muted)}
     .tag{font-family:"JetBrains Mono",monospace;font-size:.66rem;font-weight:700;padding:2px 7px;border-radius:6px}
     .tag.E{color:var(--e);background:var(--e-bg)}.tag.M{color:var(--m);background:var(--m-bg)}.tag.H{color:var(--h);background:var(--h-bg)}
     .pn{font-family:"JetBrains Mono",monospace;font-size:.74rem;color:var(--muted)}
     .pn.gfg{color:#2f8d46;font-weight:700}
-    .pn.am{color:#22c55e;font-weight:700}
 
     .nav{display:flex;justify-content:space-between;gap:12px;margin-top:30px}
     footer{text-align:center;color:var(--muted);font-size:.82rem;padding:28px 20px 54px}
@@ -128,24 +120,20 @@
 <body>
   <header class="bar">
     <div class="bar-in">
-      <button class="menu-btn" id="menuBtn" aria-label="Toggle topics">☰</button>
+      <button class="menu-btn" id="menuBtn" aria-label="Toggle topics">Menu</button>
       <div class="logo">DSA <span>Notes</span></div>
       <div class="sp"></div>
       <a class="btn" href="index.html">← Mindstack</a>
       <a class="btn" href="dsa-patterns.html">Patterns</a>
       <a class="btn" href="dsa-sheet.html">One-day sheet</a>
-      <button class="btn" id="themeToggle">🌙</button>
-    </div>
-    <div class="prog">
-      <div class="ptrack"><div class="pfill" id="pfill"></div></div>
-      <div class="plabel" id="plabel"></div>
+      <button class="btn" id="themeToggle">Dark</button>
     </div>
   </header>
 
   <div class="scrim" id="scrim"></div>
   <div class="layout">
     <aside class="side" id="side">
-      <input id="noteSearch" class="note-search" type="text" placeholder="🔍 Search all notes…" autocomplete="off" />
+      <input id="noteSearch" class="note-search" type="text" placeholder="Search all notes…" autocomplete="off" />
       <div id="searchResults" class="search-results"></div>
       <div class="side-title">Topics</div>
       <nav id="topicNav"></nav>
@@ -160,7 +148,6 @@
     const LC = s => s.startsWith("http") ? s : `https://leetcode.com/problems/${s}/`;
     const $ = s => document.querySelector(s);
     const slug = s => s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
-    const solved = JSON.parse(localStorage.getItem("dsa-solved") || "{}");
     const params = new URLSearchParams(location.search);
 
     const topics = DSA.map(t => t.n);
@@ -216,27 +203,18 @@
       resBox.classList.add("show");
     });
 
-    let topicTotal = 0, topicDone = 0;
-
     function problemEl(p) {
       const [num, slug, title, diff] = p;
       const isNum = typeof num === "number";
       const src = isNum ? "" : String(num).toUpperCase();
       const id = isNum ? ("lc" + num) : (src + ":" + slug);
       const srcLabel = isNum ? ("#" + num) : src;
-      const srcCls = src === "AM" ? " am" : src ? " gfg" : "";
-      topicTotal++; if (solved[id]) topicDone++;
+      const srcCls = src ? " gfg" : "";
       const a = document.createElement("a");
-      a.className = "prob" + (solved[id] ? " done" : "");
+      a.className = "prob";
       a.href = LC(slug); a.target = "_blank"; a.rel = "noopener";
-      a.innerHTML = `<input type="checkbox" ${solved[id] ? "checked" : ""}/>` +
+      a.innerHTML =
         `<span class="tag ${diff}">${diff}</span><span class="pn${isNum ? "" : srcCls}">${srcLabel}</span><span class="pt">${title}</span>`;
-      const cb = a.querySelector("input");
-      cb.addEventListener("click", e => {
-        e.preventDefault(); e.stopPropagation();
-        solved[id] = cb.checked; localStorage.setItem("dsa-solved", JSON.stringify(solved));
-        a.classList.toggle("done", cb.checked); topicDone += cb.checked ? 1 : -1; updateProg();
-      });
       return a;
     }
 
@@ -246,12 +224,12 @@
     // Short Python snippet per pattern (keyed by normalized node name).
     const CODE = {
       "Fundamental array ops":
-`# ⏱ O(n) time · 🧠 O(1) space — reverse whole, then reverse the two parts
+`# O(n) time · O(1) space — reverse whole, then reverse the two parts
 # rotate array right by k (reverse trick)
 def rotate(a, k):
     k %= len(a); a.reverse(); a[:k]=a[:k][::-1]; a[k:]=a[k:][::-1]`,
       "Buy/Sell & Pascal":
-`# ⏱ O(n) time · 🧠 O(1) space — track cheapest price seen so far
+`# O(n) time · O(1) space — track cheapest price seen so far
 # best time to buy & sell (one pass)
 def max_profit(prices):
     lo, best = float('inf'), 0
@@ -259,7 +237,7 @@ def max_profit(prices):
         lo = min(lo, p); best = max(best, p - lo)
     return best`,
       "Opposite ends (left + right)":
-`# ⏱ O(n) time · 🧠 O(1) space — shrink window from both ends (needs sorted)
+`# O(n) time · O(1) space — shrink window from both ends (needs sorted)
 def two_sum_sorted(a, target):
     l, r = 0, len(a)-1
     while l < r:
@@ -267,14 +245,14 @@ def two_sum_sorted(a, target):
         if s == target: return (l, r)
         l, r = (l+1, r) if s < target else (l, r-1)`,
       "Same direction (fast & slow)":
-`# ⏱ O(n) time · 🧠 O(1) space — write pointer keeps the kept elements packed
+`# O(n) time · O(1) space — write pointer keeps the kept elements packed
 def move_zeroes(a):
     w = 0                       # write index
     for r in range(len(a)):
         if a[r] != 0:
             a[w], a[r] = a[r], a[w]; w += 1`,
       "Partition / Dutch National Flag":
-`# ⏱ O(n) time · 🧠 O(1) space — 3 pointers, single pass
+`# O(n) time · O(1) space — 3 pointers, single pass
 def sort_colors(a):             # 0s,1s,2s in one pass
     lo, mid, hi = 0, 0, len(a)-1
     while mid <= hi:
@@ -282,14 +260,14 @@ def sort_colors(a):             # 0s,1s,2s in one pass
         elif a[mid] == 1: mid += 1
         else: a[mid],a[hi]=a[hi],a[mid]; hi-=1`,
       "Fixed Size":
-`# ⏱ O(n) time · 🧠 O(1) space — slide window: add new, drop old
+`# O(n) time · O(1) space — slide window: add new, drop old
 def max_sum_k(a, k):            # fixed window
     s = sum(a[:k]); best = s
     for r in range(k, len(a)):
         s += a[r] - a[r-k]; best = max(best, s)
     return best`,
       "Variable Size (expand-shrink)":
-`# ⏱ O(n) time · 🧠 O(min(n, charset)) space — grow right, jump left past dup
+`# O(n) time · O(min(n, charset)) space — grow right, jump left past dup
 def longest_no_repeat(s):
     last, left, best = {}, 0, 0
     for r, ch in enumerate(s):
@@ -299,7 +277,7 @@ def longest_no_repeat(s):
         best = max(best, r - left + 1)
     return best`,
       "Prefix Sum":
-`# ⏱ O(n) time · 🧠 O(n) space — hashmap of prefix-sum frequencies
+`# O(n) time · O(n) space — hashmap of prefix-sum frequencies
 # count subarrays with sum == k
 seen = {0: 1}; pre = ans = 0
 for x in nums:
@@ -307,7 +285,7 @@ for x in nums:
     ans += seen.get(pre - k, 0)
     seen[pre] = seen.get(pre, 0) + 1`,
       "Prefix XOR / 2D Prefix":
-`# ⏱ O(n) time · 🧠 O(n) space — hashmap of prefix-XOR frequencies
+`# O(n) time · O(n) space — hashmap of prefix-XOR frequencies
 # subarray XOR = pre[r] ^ pre[l-1]
 seen = {0: 1}; pre = ans = 0
 for x in nums:
@@ -315,7 +293,7 @@ for x in nums:
     ans += seen.get(pre ^ k, 0)
     seen[pre] = seen.get(pre, 0) + 1`,
       "Kadane's / Max Subarray":
-`# ⏱ O(n) time · 🧠 O(1) space — at each i: extend running sum or restart
+`# O(n) time · O(1) space — at each i: extend running sum or restart
 def kadane(a):
     cur = best = a[0]
     for x in a[1:]:
@@ -323,7 +301,7 @@ def kadane(a):
         best = max(best, cur)
     return best`,
       "Matrix Operations (Striver)":
-`# ⏱ O(n^2) time · 🧠 O(1) space — in-place transpose + row reverse
+`# O(n^2) time · O(1) space — in-place transpose + row reverse
 # rotate image 90deg = transpose then reverse each row
 def rotate(m):
     n = len(m)
@@ -332,7 +310,7 @@ def rotate(m):
             m[i][j], m[j][i] = m[j][i], m[i][j]
     for row in m: row.reverse()`,
       "Rearrangement & Counting (Striver)":
-`# ⏱ O(n) time · 🧠 O(1) space — vote up for cand, down otherwise
+`# O(n) time · O(1) space — vote up for cand, down otherwise
 # Boyer-Moore majority (> n/2)
 def majority(a):
     cand = count = 0
@@ -341,7 +319,7 @@ def majority(a):
         count += 1 if x == cand else -1
     return cand`,
       "Duplicates & Missing (Striver)":
-`# ⏱ O(n) time · 🧠 O(1) space — treat values as next pointers (cycle = dup)
+`# O(n) time · O(1) space — treat values as next pointers (cycle = dup)
 # find duplicate: Floyd's cycle on values
 def find_dup(a):
     slow = fast = a[0]
@@ -352,7 +330,7 @@ def find_dup(a):
     while slow != fast: slow = a[slow]; fast = a[fast]
     return slow`,
       "Merge & Intervals (Striver)":
-`# ⏱ O(n log n) time (sort) · 🧠 O(n) space — sort by start, extend or append
+`# O(n log n) time (sort) · O(n) space — sort by start, extend or append
 def merge(intervals):
     intervals.sort()
     res = []
@@ -363,7 +341,7 @@ def merge(intervals):
     return res`,
 
       "On array / index":
-`# ⏱ O(log n) time · 🧠 O(1) space — halve the search range each step
+`# O(log n) time · O(1) space — halve the search range each step
 def bsearch(a, x):
     lo, hi = 0, len(a)-1
     while lo <= hi:
@@ -373,7 +351,7 @@ def bsearch(a, x):
         else: hi = mid-1
     return -1`,
       "On answer (min/max feasible)":
-`# ⏱ O(log(range) · cost of ok) · 🧠 O(1) — binary search the answer space
+`# O(log(range) · cost of ok) · O(1) — binary search the answer space
 def min_feasible(lo, hi, ok):     # smallest x with ok(x)==True
     while lo < hi:
         mid = (lo+hi)//2
@@ -382,7 +360,7 @@ def min_feasible(lo, hi, ok):     # smallest x with ok(x)==True
     return lo
 # Koko: ok(sp) = sum(ceil(p/sp) for p in piles) <= h`,
       "Peaks, matrix & special":
-`# ⏱ O(log n) time · 🧠 O(1) space — move toward the higher neighbor
+`# O(log n) time · O(1) space — move toward the higher neighbor
 def find_peak(a):
     lo, hi = 0, len(a)-1
     while lo < hi:
@@ -391,7 +369,7 @@ def find_peak(a):
         else: hi = mid
     return lo`,
       "Math via binary search":
-`# ⏱ O(log b) time · 🧠 O(1) space — square base, consume exponent bit by bit
+`# O(log b) time · O(1) space — square base, consume exponent bit by bit
 def power(a, b):                # fast exponentiation
     res = 1
     while b:
@@ -400,7 +378,7 @@ def power(a, b):                # fast exponentiation
     return res`,
 
       "Two Pointers":
-`# ⏱ O(n) time · 🧠 O(1) space — compare ends moving inward
+`# O(n) time · O(1) space — compare ends moving inward
 def is_palindrome(s):
     l, r = 0, len(s)-1
     while l < r:
@@ -408,12 +386,12 @@ def is_palindrome(s):
         l += 1; r -= 1
     return True`,
       "Anagrams & Frequency":
-`# ⏱ O(n) time · 🧠 O(charset) space — compare character counts
+`# O(n) time · O(charset) space — compare character counts
 from collections import Counter
 def is_anagram(a, b):
     return Counter(a) == Counter(b)   # or sorted(a)==sorted(b)`,
       "Pattern Matching (KMP / Rolling Hash)":
-`# ⏱ O(m) build, O(n+m) match · 🧠 O(m) space — longest prefix=suffix table
+`# O(m) build, O(n+m) match · O(m) space — longest prefix=suffix table
 def build_lps(p):               # KMP failure function
     lps = [0]*len(p); k = 0
     for i in range(1, len(p)):
@@ -422,7 +400,7 @@ def build_lps(p):               # KMP failure function
         lps[i] = k
     return lps`,
       "Compression & Misc (Striver)":
-`# ⏱ O(n) time · 🧠 O(1) space — write pointer emits char + run length
+`# O(n) time · O(1) space — write pointer emits char + run length
 def compress(chars):            # run-length in place
     w = 0; i = 0
     while i < len(chars):
@@ -435,14 +413,14 @@ def compress(chars):            # run-length in place
     return w`,
 
       "Lookup & Two Sum family":
-`# ⏱ O(n) time · 🧠 O(n) space — hashmap remembers value -> index
+`# O(n) time · O(n) space — hashmap remembers value -> index
 def two_sum(nums, target):
     seen = {}
     for i, x in enumerate(nums):
         if target-x in seen: return [seen[target-x], i]
         seen[x] = i`,
       "Frequency & Grouping":
-`# ⏱ O(n·k log k) time · 🧠 O(n·k) space — sorted word is the group key
+`# O(n·k log k) time · O(n·k) space — sorted word is the group key
 from collections import defaultdict
 def group_anagrams(words):
     g = defaultdict(list)
@@ -450,7 +428,7 @@ def group_anagrams(words):
         g["".join(sorted(w))].append(w)   # sorted = key
     return list(g.values())`,
       "Index / Set tricks":
-`# ⏱ O(n) time · 🧠 O(n) space — only expand runs from their start element
+`# O(n) time · O(n) space — only expand runs from their start element
 def longest_consecutive(nums):
     s = set(nums); best = 0
     for x in s:
@@ -461,7 +439,7 @@ def longest_consecutive(nums):
     return best`,
 
       "Next Greater / Smaller":
-`# ⏱ O(n) time · 🧠 O(n) space — monotonic stack; each index pushed/popped once
+`# O(n) time · O(n) space — monotonic stack; each index pushed/popped once
 def next_greater(a):
     res = [-1]*len(a); st = []       # indices, decreasing
     for i, x in enumerate(a):
@@ -470,7 +448,7 @@ def next_greater(a):
         st.append(i)
     return res`,
       "Histogram / Spans":
-`# ⏱ O(n) time · 🧠 O(n) space — stack gives nearest-smaller left/right bounds
+`# O(n) time · O(n) space — stack gives nearest-smaller left/right bounds
 def largest_rectangle(h):
     h.append(0); st = []; best = 0
     for i, x in enumerate(h):
@@ -481,7 +459,7 @@ def largest_rectangle(h):
         st.append(i)
     return best`,
       "Design (Min/Max stack, queues, cache)":
-`# ⏱ O(1) per op · 🧠 O(n) space — store running min alongside each value
+`# O(1) per op · O(n) space — store running min alongside each value
 class MinStack:                  # push (val, running_min)
     def __init__(self): self.st = []
     def push(self, x):
@@ -491,7 +469,7 @@ class MinStack:                  # push (val, running_min)
     def top(self): return self.st[-1][0]
     def getMin(self): return self.st[-1][1]`,
       "Expression Handling":
-`# ⏱ O(n) time · 🧠 O(n) space — stack matches each closer to its opener
+`# O(n) time · O(n) space — stack matches each closer to its opener
 def valid(s):
     st = []; pair = {')':'(', ']':'[', '}':'{'}
     for c in s:
@@ -500,7 +478,7 @@ def valid(s):
         else: st.append(c)
     return not st`,
       "Monotonic Deque (window extremes)":
-`# ⏱ O(n) time · 🧠 O(k) space — deque keeps indices in decreasing value order
+`# O(n) time · O(k) space — deque keeps indices in decreasing value order
 from collections import deque
 def window_max(a, k):
     dq, res = deque(), []           # indices, decreasing
@@ -512,7 +490,7 @@ def window_max(a, k):
     return res`,
 
       "Fast-Slow Pointers":
-`# ⏱ O(n) time · 🧠 O(1) space — fast moves 2x, slow 1x
+`# O(n) time · O(1) space — fast moves 2x, slow 1x
 slow = fast = head
 while fast and fast.next:
     slow = slow.next
@@ -520,14 +498,14 @@ while fast and fast.next:
 # slow = middle. If slow met fast earlier -> cycle.
 # cycle start: reset one ptr to head, advance both +1.`,
       "Reversal":
-`# ⏱ O(n) time · 🧠 O(1) space — flip each next pointer, carry prev along
+`# O(n) time · O(1) space — flip each next pointer, carry prev along
 def reverse(head):
     prev = None
     while head:
         head.next, prev, head = prev, head, head.next
     return prev`,
       "Merge / Add / Reorder":
-`# ⏱ O(n+m) time · 🧠 O(1) space — dummy head, splice smaller node each step
+`# O(n+m) time · O(1) space — dummy head, splice smaller node each step
 def merge(a, b):
     dummy = tail = ListNode(0)
     while a and b:
@@ -537,7 +515,7 @@ def merge(a, b):
     tail.next = a or b
     return dummy.next`,
       "LL + Arrays / Misc (Striver)":
-`# ⏱ O(n) time · 🧠 O(1) space — gap of n between fast & slow, one pass
+`# O(n) time · O(1) space — gap of n between fast & slow, one pass
 def remove_nth_from_end(head, n):
     dummy = ListNode(0, head); fast = slow = dummy
     for _ in range(n): fast = fast.next
@@ -546,12 +524,12 @@ def remove_nth_from_end(head, n):
     return dummy.next`,
 
       "Traversals":
-`# ⏱ O(n) time · 🧠 O(h) space (recursion stack, h = height)
+`# O(n) time · O(h) space (recursion stack, h = height)
 def inorder(n, out):            # L, Node, R  (BST -> sorted)
     if not n: return
     inorder(n.left, out); out.append(n.val); inorder(n.right, out)`,
       "BFS / Views":
-`# ⏱ O(n) time · 🧠 O(w) space (w = max level width) — level-order BFS
+`# O(n) time · O(w) space (w = max level width) — level-order BFS
 from collections import deque
 def right_view(root):
     res, q = [], deque([root] if root else [])
@@ -564,7 +542,7 @@ def right_view(root):
         res.append(n.val)           # last node of the level
     return res`,
       "Properties (height/diameter/balanced)":
-`# ⏱ O(n) time · 🧠 O(h) space — post-order returns depth, updates best
+`# O(n) time · O(h) space — post-order returns depth, updates best
 def diameter(root):
     best = 0
     def depth(n):
@@ -575,7 +553,7 @@ def diameter(root):
         return 1 + max(L, R)
     depth(root); return best`,
       "Path Problems":
-`# ⏱ O(n) time · 🧠 O(h) space — each node returns best downward gain
+`# O(n) time · O(h) space — each node returns best downward gain
 def max_path_sum(root):
     best = float('-inf')
     def gain(n):
@@ -586,13 +564,13 @@ def max_path_sum(root):
         return n.val + max(L, R)         # best downward
     gain(root); return best`,
       "Structure (symmetry / invert / connect)":
-`# ⏱ O(n) time · 🧠 O(h) space — swap children recursively
+`# O(n) time · O(h) space — swap children recursively
 def invert(n):
     if not n: return None
     n.left, n.right = invert(n.right), invert(n.left)
     return n`,
       "Construction & Serialize (Striver)":
-`# ⏱ O(n) time · 🧠 O(n) space — index map avoids rescanning inorder
+`# O(n) time · O(n) space — index map avoids rescanning inorder
 def build(preorder, inorder):
     idx = {v:i for i,v in enumerate(inorder)}
     self_pre = iter(preorder)
@@ -603,7 +581,7 @@ def build(preorder, inorder):
         return node
     return go(0, len(inorder)-1)`,
       "Misc (distance-K, width, complete count)":
-`# ⏱ O(log^2 n) time · 🧠 O(log n) space — compare left/right heights
+`# O(log^2 n) time · O(log n) space — compare left/right heights
 def count_nodes(root):          # complete tree in O(log^2 n)
     if not root: return 0
     def h(n, left):
@@ -615,14 +593,14 @@ def count_nodes(root):          # complete tree in O(log^2 n)
     return 1 + count_nodes(root.left) + count_nodes(root.right)`,
 
       "Search / Insert / Delete":
-`# ⏱ O(h) time · 🧠 O(h) space — go left/right by BST order
+`# O(h) time · O(h) space — go left/right by BST order
 def insert(root, val):
     if not root: return TreeNode(val)
     if val < root.val: root.left = insert(root.left, val)
     else: root.right = insert(root.right, val)
     return root`,
       "Validate / Kth / Two-Sum":
-`# ⏱ O(h + k) time · 🧠 O(h) space — iterative inorder, stop at k-th
+`# O(h + k) time · O(h) space — iterative inorder, stop at k-th
 def kth_smallest(root, k):      # inorder of BST is sorted
     st, node = [], root
     while st or node:
@@ -631,7 +609,7 @@ def kth_smallest(root, k):      # inorder of BST is sorted
         if k == 0: return node.val
         node = node.right`,
       "LCA / Successor / Construct":
-`# ⏱ O(h) time · 🧠 O(1) space — first node where p, q split = LCA
+`# O(h) time · O(1) space — first node where p, q split = LCA
 def lca_bst(root, p, q):
     while root:
         if p < root.val and q < root.val: root = root.left
@@ -639,7 +617,7 @@ def lca_bst(root, p, q):
         else: return root           # split point = LCA`,
 
       "Subsets / Power set":
-`# ⏱ O(n·2^n) time · 🧠 O(n) space (excl. output) — include/exclude each item
+`# O(n·2^n) time · O(n) space (excl. output) — include/exclude each item
 def subsets(nums):
     res = []
     def bt(start, path):
@@ -648,7 +626,7 @@ def subsets(nums):
             path.append(nums[i]); bt(i+1, path); path.pop()
     bt(0, []); return res`,
       "Permutations / Combinations":
-`# ⏱ O(n·n!) time · 🧠 O(n) space (excl. output) — used[] tracks picked items
+`# O(n·n!) time · O(n) space (excl. output) — used[] tracks picked items
 def permute(nums):
     res = []
     def bt(path, used):
@@ -660,7 +638,7 @@ def permute(nums):
             path.pop(); used[i] = False
     bt([], [False]*len(nums)); return res`,
       "Grid / Partition backtracking":
-`# ⏱ O(R·C·4^L) time · 🧠 O(L) space — DFS, mark cell then restore (backtrack)
+`# O(R·C·4^L) time · O(L) space — DFS, mark cell then restore (backtrack)
 def exist(board, word):
     R, C = len(board), len(board[0])
     def dfs(r, c, i):
@@ -672,7 +650,7 @@ def exist(board, word):
         return found
     return any(dfs(r,c,0) for r in range(R) for c in range(C))`,
       "Constraint solving (pruning)":
-`# ⏱ O(n!) time · 🧠 O(n) space — sets prune column & both diagonals in O(1)
+`# O(n!) time · O(n) space — sets prune column & both diagonals in O(1)
 def solve_n_queens(n):
     res = []; cols=set(); diag=set(); anti=set()
     def bt(r, board):
@@ -685,7 +663,7 @@ def solve_n_queens(n):
     bt(0, [['.']*n for _ in range(n)]); return res`,
 
       "Interval Greedy":
-`# ⏱ O(n log n) time · 🧠 O(1) space — sort by END, keep earliest-finishing
+`# O(n log n) time · O(1) space — sort by END, keep earliest-finishing
 def erase_overlap(intervals):    # min removals
     intervals.sort(key=lambda x: x[1])   # sort by END
     end = float('-inf'); removed = 0
@@ -694,7 +672,7 @@ def erase_overlap(intervals):    # min removals
         else: removed += 1               # drop overlap
     return removed`,
       "Scheduling / Profit (heap)":
-`# ⏱ O(n log n) time · 🧠 O(n) space — heap of affordable projects, take max
+`# O(n log n) time · O(n) space — heap of affordable projects, take max
 import heapq
 def max_capital(k, w, profits, capital):
     projs = sorted(zip(capital, profits)); h = []; i = 0
@@ -705,7 +683,7 @@ def max_capital(k, w, profits, capital):
         w += -heapq.heappop(h)           # take max profit affordable
     return w`,
       "Jump / Reach":
-`# ⏱ O(n) time · 🧠 O(1) space — track farthest reachable index
+`# O(n) time · O(1) space — track farthest reachable index
 def can_jump(nums):
     reach = 0
     for i, x in enumerate(nums):
@@ -714,7 +692,7 @@ def can_jump(nums):
     return True`,
 
       "Top-K / Kth":
-`# ⏱ O(n log k) time · 🧠 O(k) space — min-heap of size k keeps top-k
+`# O(n log k) time · O(k) space — min-heap of size k keeps top-k
 import heapq
 def kth_largest(nums, k):
     h = []                          # min-heap of size k
@@ -723,7 +701,7 @@ def kth_largest(nums, k):
         if len(h) > k: heapq.heappop(h)
     return h[0]`,
       "Two Heaps (median)":
-`# ⏱ O(log n) add · O(1) median · 🧠 O(n) space — balance max-heap & min-heap
+`# O(log n) add · O(1) median · O(n) space — balance max-heap & min-heap
 import heapq
 class MedianFinder:
     def __init__(self): self.lo=[]; self.hi=[]   # lo=max-heap(neg), hi=min-heap
@@ -734,7 +712,7 @@ class MedianFinder:
     def median(self):
         return self.hi[0] if len(self.hi)>len(self.lo) else (self.hi[0]-self.lo[0])/2`,
       "K-way Merge":
-`# ⏱ O(N log k) time · 🧠 O(k) space — heap holds one head per list
+`# O(N log k) time · O(k) space — heap holds one head per list
 import heapq
 def merge_k(lists):
     h = [(l[0], i, 0) for i, l in enumerate(lists) if l]
@@ -746,7 +724,7 @@ def merge_k(lists):
     return out`,
 
       "Traversal (BFS / DFS)":
-`# ⏱ O(V+E) time · 🧠 O(V) space — visit each vertex/edge once
+`# O(V+E) time · O(V) space — visit each vertex/edge once
 # Works on DIRECTED & UNDIRECTED graphs (adjacency list either way).
 from collections import deque
 def bfs(start, adj):
@@ -761,7 +739,7 @@ def dfs(u, adj, seen):
     for v in adj[u]:
         if v not in seen: dfs(v, adj, seen)`,
       "Cycle Detection":
-`# ⏱ O(V+E) time · 🧠 O(V) space (state + recursion). Method DIFFERS by graph type!
+`# O(V+E) time · O(V) space (state + recursion). Method DIFFERS by graph type!
 
 # DIRECTED graph -> 3-color DFS (0=unseen, 1=in-stack, 2=done).
 # A cycle = a "back-edge" to a node still on the recursion stack (state 1).
@@ -790,7 +768,7 @@ def has_cycle_undirected(n, adj):
     return any(not seen[i] and dfs(i, -1) for i in range(n))
 # (Undirected cycle detection is also easy with Union-Find: see MST & DSU.)`,
       "Topological Sort":
-`# ⏱ O(V+E) time · 🧠 O(V) space — Kahn's algo (BFS on indegrees)
+`# O(V+E) time · O(V) space — Kahn's algo (BFS on indegrees)
 # DIRECTED ACYCLIC graphs only; empty result signals a cycle exists.
 from collections import deque, defaultdict
 def topo(n, edges):
@@ -804,8 +782,8 @@ def topo(n, edges):
             if indeg[v] == 0: q.append(v)
     return order if len(order)==n else []   # [] => cycle`,
       "Shortest Path":
-`# ⏱ BFS O(V+E) · Dijkstra O(E log V) · Bellman-Ford O(V*E) · Floyd O(V^3)
-# 🧠 O(V) for BFS/Dijkstra/Bellman-Ford (+heap), O(V^2) for Floyd's matrix.
+`# BFS O(V+E) · Dijkstra O(E log V) · Bellman-Ford O(V*E) · Floyd O(V^3)
+# O(V) for BFS/Dijkstra/Bellman-Ford (+heap), O(V^2) for Floyd's matrix.
 # ALL four work on DIRECTED & UNDIRECTED graphs
 # (an undirected edge u-w = two directed edges u->w and w->u).
 # ⚠️ Negative weights only make sense for DIRECTED graphs: a single negative
@@ -854,7 +832,7 @@ def floyd(d, n):
     # NEGATIVE-CYCLE CHECK: any d[i][i] < 0 means a negative cycle through i
     return d`,
       "MST & Union-Find (DSU)":
-`# ⏱ ~O(α(n)) ≈ O(1) per find/union · Kruskal O(E log E) · 🧠 O(V) space
+`# ~O(α(n)) ≈ O(1) per find/union · Kruskal O(E log E) · O(V) space
 # DSU on an UNDIRECTED graph: union() returning False (same set) = a cycle.
 parent = list(range(n)); rank = [0]*n
 def find(x):
@@ -870,7 +848,7 @@ def union(a, b):
     return True
 # Kruskal: sort edges by weight, union() each; skip if returns False`,
       "Advanced (bridges / SCC / bipartite)":
-`# ⏱ O(V+E) time · 🧠 O(V) space — 2-color BFS (bipartite = UNDIRECTED graphs)
+`# O(V+E) time · O(V) space — 2-color BFS (bipartite = UNDIRECTED graphs)
 from collections import deque
 def is_bipartite(n, adj):
     color = [0]*n
@@ -885,7 +863,7 @@ def is_bipartite(n, adj):
     return True`,
 
       "Insert / Search / Prefix":
-`# ⏱ O(L) per insert/search (L = word length) · 🧠 O(total chars) space
+`# O(L) per insert/search (L = word length) · O(total chars) space
 class Trie:
     def __init__(self): self.root = {}
     def insert(self, w):
@@ -899,7 +877,7 @@ class Trie:
             node = node[c]
         return prefix or '$' in node`,
       "Bitwise Trie (XOR)":
-`# ⏱ O(n·32) time · 🧠 O(n·32) space — at each bit, greedily go opposite
+`# O(n·32) time · O(n·32) space — at each bit, greedily go opposite
 # maximize XOR: greedily pick the opposite bit at each level
 def max_xor(nums):
     root = {}; best = 0
@@ -915,14 +893,14 @@ def max_xor(nums):
     return best`,
 
       "1D DP (take / not-take)":
-`# ⏱ O(n) time · 🧠 O(1) space — roll two states: take vs skip
+`# O(n) time · O(1) space — roll two states: take vs skip
 def rob(nums):                  # house robber
     take, skip = 0, 0
     for x in nums:
         take, skip = skip + x, max(skip, take)
     return max(take, skip)`,
       "Grid / 2D DP":
-`# ⏱ O(m·n) time · 🧠 O(n) space — 1 row rolled; dp[j] += dp[j-1]
+`# O(m·n) time · O(n) space — 1 row rolled; dp[j] += dp[j-1]
 def unique_paths(m, n):
     dp = [1]*n
     for _ in range(1, m):
@@ -930,7 +908,7 @@ def unique_paths(m, n):
             dp[j] += dp[j-1]
     return dp[-1]`,
       "Subsequences / Knapsack":
-`# ⏱ O(n·cap) time · 🧠 O(n·cap) space — memoize (index, remaining capacity)
+`# O(n·cap) time · O(n·cap) space — memoize (index, remaining capacity)
 from functools import lru_cache
 @lru_cache(None)
 def knap(i, cap):               # 0/1 knapsack
@@ -940,7 +918,7 @@ def knap(i, cap):               # 0/1 knapsack
         best = max(best, val[i] + knap(i+1, cap-wt[i]))  # take
     return best`,
       "Strings DP (LCS family)":
-`# ⏱ O(m·n) time · 🧠 O(m·n) space — match: diag+1, else max(up, left)
+`# O(m·n) time · O(m·n) space — match: diag+1, else max(up, left)
 def lcs(a, b):
     m, n = len(a), len(b)
     dp = [[0]*(n+1) for _ in range(m+1)]
@@ -949,7 +927,7 @@ def lcs(a, b):
             dp[i][j] = dp[i-1][j-1]+1 if a[i-1]==b[j-1] else max(dp[i-1][j], dp[i][j-1])
     return dp[m][n]`,
       "LIS & Stocks":
-`# ⏱ O(n log n) time · 🧠 O(n) space — patience: replace first tail >= x
+`# O(n log n) time · O(n) space — patience: replace first tail >= x
 import bisect
 def lis(a):                     # O(n log n)
     tails = []
@@ -959,7 +937,7 @@ def lis(a):                     # O(n log n)
         else: tails[i] = x
     return len(tails)`,
       "Partition / MCM / Interval DP":
-`# ⏱ O(n^3) time · 🧠 O(n^2) space — try each k as the LAST balloon in (l,r)
+`# O(n^3) time · O(n^2) space — try each k as the LAST balloon in (l,r)
 from functools import lru_cache
 def burst_balloons(nums):
     a = [1] + nums + [1]
@@ -970,7 +948,7 @@ def burst_balloons(nums):
                    for k in range(l+1, r))
     return dp(0, len(a)-1)`,
       "DP on Trees / Bitmask":
-`# ⏱ O(n) time · 🧠 O(h) space — each node returns (rob, skip) pair
+`# O(n) time · O(h) space — each node returns (rob, skip) pair
 def rob_tree(root):             # return (rob_this, skip_this)
     def dfs(n):
         if not n: return (0, 0)
@@ -981,13 +959,13 @@ def rob_tree(root):             # return (rob_this, skip_this)
     return max(dfs(root))`,
 
       "XOR tricks":
-`# ⏱ O(n) time · 🧠 O(1) space — equal pairs cancel under XOR
+`# O(n) time · O(1) space — equal pairs cancel under XOR
 def single_number(nums):        # every element twice except one
     x = 0
     for v in nums: x ^= v       # pairs cancel
     return x`,
       "Counting & masks":
-`# ⏱ O(n) time · 🧠 O(n) space — dp[i] = dp[i>>1] + (i&1)
+`# O(n) time · O(n) space — dp[i] = dp[i>>1] + (i&1)
 def count_bits(n):
     dp = [0]*(n+1)
     for i in range(1, n+1):
@@ -995,7 +973,7 @@ def count_bits(n):
     return dp`,
 
       "Merge Sort & inversions":
-`# ⏱ O(n log n) time · 🧠 O(n) space — split, sort halves, merge (stable)
+`# O(n log n) time · O(n) space — split, sort halves, merge (stable)
 def merge_sort(a):
     if len(a) <= 1: return a
     m = len(a)//2
@@ -1006,7 +984,7 @@ def merge_sort(a):
         else: out.append(R[j]); j += 1
     return out + L[i:] + R[j:]`,
       "Quick Select & partition":
-`# ⏱ O(n) average, O(n^2) worst · 🧠 O(n) space — partition, recurse one side
+`# O(n) average, O(n^2) worst · O(n) space — partition, recurse one side
 import random
 def quickselect(a, k):          # kth smallest (0-indexed)
     pivot = random.choice(a)
@@ -1017,7 +995,7 @@ def quickselect(a, k):          # kth smallest (0-indexed)
     if k < len(lo)+len(eq): return pivot
     return quickselect(hi, k-len(lo)-len(eq))`,
       "Counting / Bucket / Radix":
-`# ⏱ O(n + k) time · 🧠 O(k) space — tally counts, then expand (no compares)
+`# O(n + k) time · O(k) space — tally counts, then expand (no compares)
 def counting_sort(a, k):        # values in 0..k
     cnt = [0]*(k+1)
     for x in a: cnt[x] += 1
@@ -1026,7 +1004,7 @@ def counting_sort(a, k):        # values in 0..k
     return out`,
 
       "Fenwick Tree (BIT)":
-`# ⏱ O(log n) per update/query · 🧠 O(n) space — i & -i jumps by lowest set bit
+`# O(log n) per update/query · O(n) space — i & -i jumps by lowest set bit
 class BIT:                      # 1-indexed
     def __init__(self, n): self.t = [0]*(n+1)
     def update(self, i, delta):
@@ -1036,7 +1014,7 @@ class BIT:                      # 1-indexed
         while i > 0: s += self.t[i]; i -= i & -i
         return s`,
       "Segment Tree (+ Lazy)":
-`# ⏱ O(n) build · O(log n) update/query · 🧠 O(n) space — iterative, 2n array
+`# O(n) build · O(log n) update/query · O(n) space — iterative, 2n array
 class SegTree:                  # range sum, point update
     def __init__(self, a):
         self.n = len(a); self.t = [0]*(2*self.n)
@@ -1097,11 +1075,6 @@ class SegTree:                  # range sum, point update
       }
     }
 
-    function updateProg() {
-      const pct = topicTotal ? Math.round(topicDone/topicTotal*100) : 0;
-      $("#pfill").style.width = pct + "%";
-      $("#plabel").textContent = `${current}: ${topicDone} / ${topicTotal} solved · ${pct}%`;
-    }
 
     const topicNode = DSA.find(t => t.n === current);
     const main = $("#main");
@@ -1118,8 +1091,6 @@ class SegTree:                  # range sum, point update
     if (idx < topics.length-1) { next.href = "?topic=" + encodeURIComponent(topics[idx+1]); next.textContent = topics[idx+1] + " →"; } else next.style.visibility="hidden";
     navRow.append(prev, next); main.appendChild(navRow);
 
-    updateProg();
-
     // Jump + highlight when arriving via a search result (#n-...)
     function scrollToHash() {
       if (!location.hash) return;
@@ -1130,10 +1101,10 @@ class SegTree:                  # range sum, point update
     window.addEventListener("hashchange", scrollToHash);
 
     const t=$("#themeToggle"), root=document.documentElement, saved=localStorage.getItem("dsa-theme");
-    if(saved==="dark"||(!saved&&matchMedia("(prefers-color-scheme: dark)").matches)){root.setAttribute("data-theme","dark");t.textContent="☀️";}
+    if(saved==="dark"||(!saved&&matchMedia("(prefers-color-scheme: dark)").matches)){root.setAttribute("data-theme","dark");t.textContent="Light";}
     t.addEventListener("click",()=>{const d=root.getAttribute("data-theme")==="dark";
-      if(d){root.removeAttribute("data-theme");t.textContent="🌙";localStorage.setItem("dsa-theme","light");}
-      else{root.setAttribute("data-theme","dark");t.textContent="☀️";localStorage.setItem("dsa-theme","dark");}});
+      if(d){root.removeAttribute("data-theme");t.textContent="Dark";localStorage.setItem("dsa-theme","light");}
+      else{root.setAttribute("data-theme","dark");t.textContent="Light";localStorage.setItem("dsa-theme","dark");}});
   </script>
 </body>
 </html>

@@ -7,12 +7,7 @@
 const DSA = [
 
   /* ===================== FUNDAMENTALS ===================== */
-  { n: "🐍 Fundamentals (Python) — Start Here", h: "Master these building blocks first; every pattern below reuses them.", c: [
-    { n: "Where to practice more",
-      note: "<b>AlgoMaster company lists</b> — Google (and Amazon, Meta, …) tagged DSA. Use it after you know the pattern, not instead of this sheet.",
-      p: [
-        ["AM", "https://algomaster.io/practice/company/google", "AlgoMaster — Google DSA list", "M"],
-      ]},
+  { n: "Fundamentals (Python) — Start Here", h: "Master these building blocks first; every pattern below reuses them.", c: [
     { n: "Big-O Complexity", note: "Judge an algorithm by how it <b>scales</b>, not raw speed. Aim: reduce a brute-force <code>O(n²)</code> to <code>O(n log n)</code> or <code>O(n)</code>.<br><b>Common orders:</b> O(1) &lt; O(log n) &lt; O(n) &lt; O(n log n) &lt; O(n²) &lt; O(2ⁿ) &lt; O(n!).<br><b>Space</b> counts recursion stack + extra structures." },
     { n: "Arrays & Lists", note: "Python <code>list</code> = dynamic array. Index/append are O(1); insert/pop at front are O(n).", code:
 `nums = [3, 1, 2]

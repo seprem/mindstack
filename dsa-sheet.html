@@ -94,8 +94,8 @@
       <a class="btn" href="index.html">← Mindstack</a>
       <a class="btn" href="dsa-notes.html">Notes</a>
       <a class="btn" href="dsa-patterns.html">Patterns</a>
-      <button class="btn" onclick="window.print()">⬇ Save PDF</button>
-      <button class="btn" id="themeToggle">🌙</button>
+      <button class="btn" onclick="window.print()">Save PDF</button>
+      <button class="btn" id="themeToggle">Dark</button>
     </div>
     <nav class="toc" id="toc"></nav>
   </header>
@@ -717,10 +717,10 @@ def power(a, b, mod):
     secs.forEach(s=>{const a=document.createElement("a");a.href="#"+s.id;a.textContent=s.querySelector("h2").textContent.trim();toc.appendChild(a);});
     const t=document.getElementById("themeToggle"), root=document.documentElement;
     const saved=localStorage.getItem("dsa-theme");
-    if(saved==="dark"||(!saved&&matchMedia("(prefers-color-scheme: dark)").matches)){root.setAttribute("data-theme","dark");t.textContent="☀️";}
+    if(saved==="dark"||(!saved&&matchMedia("(prefers-color-scheme: dark)").matches)){root.setAttribute("data-theme","dark");t.textContent="Light";}
     t.addEventListener("click",()=>{const d=root.getAttribute("data-theme")==="dark";
-      if(d){root.removeAttribute("data-theme");t.textContent="🌙";localStorage.setItem("dsa-theme","light");}
-      else{root.setAttribute("data-theme","dark");t.textContent="☀️";localStorage.setItem("dsa-theme","dark");}});
+      if(d){root.removeAttribute("data-theme");t.textContent="Dark";localStorage.setItem("dsa-theme","light");}
+      else{root.setAttribute("data-theme","dark");t.textContent="Light";localStorage.setItem("dsa-theme","dark");}});
   </script>
 </body>
 </html>

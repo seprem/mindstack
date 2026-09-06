@@ -4,7 +4,7 @@ const saved = localStorage.getItem("dsa-theme");
 
 if (saved === "dark" || (!saved && window.matchMedia("(prefers-color-scheme: dark)").matches)) {
   root.setAttribute("data-theme", "dark");
-  if (toggle) toggle.textContent = "☀️";
+  if (toggle) toggle.textContent = "Light";
 }
 
 if (toggle) {
@@ -12,11 +12,11 @@ if (toggle) {
     const isDark = root.getAttribute("data-theme") === "dark";
     if (isDark) {
       root.removeAttribute("data-theme");
-      toggle.textContent = "🌙";
+      toggle.textContent = "Dark";
       localStorage.setItem("dsa-theme", "light");
     } else {
       root.setAttribute("data-theme", "dark");
-      toggle.textContent = "☀️";
+      toggle.textContent = "Light";
       localStorage.setItem("dsa-theme", "dark");
     }
   });

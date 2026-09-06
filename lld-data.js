@@ -1,18 +1,10 @@
 /* Low-Level Design — one-pager notes + practice
-   Node: { n, h?, note?, code?, p?: [[num|"GFG"|"EDU"|"HI"|"AM"|"LIST", slug|url, title, "E|M|H"], ...], c?: [...] }
+   Node: { n, h?, note?, code?, p?: [[num|"GFG"|"EDU"|"HI"|"LIST", slug|url, title, "E|M|H"], ...], c?: [...] }
 */
 const LLD = [
 
   /* ===================== OVERVIEW ===================== */
   { n: "Overview", h: "Three intro cards: what LLD is, how to approach a problem, and interview tips. HLD is what the system does at scale; LLD is how one service is built.", c: [
-    { n: "Where to study more",
-      h: "Use this sheet as the map. Open AlgoMaster when you want a full LLD course, coded machine-coding problems, or concurrency drills.",
-      note: "<b>AlgoMaster LLD</b> — OOP, SOLID, UML, GoF patterns, then parking lot / elevator / Splitwise-style questions.<br><b>AlgoMaster LLD practice</b> — browser editor, class contracts, automated tests.<br><b>AlgoMaster concurrency</b> — thread-safe queue, cache, rate limiter, FizzBuzz, dining philosophers.",
-      p: [
-        ["AM", "https://algomaster.io/learn/lld", "AlgoMaster — Learn LLD", "E"],
-        ["AM", "https://algomaster.io/practice/low-level-design", "AlgoMaster — LLD practice", "M"],
-        ["AM", "https://algomaster.io/practice/concurrency", "AlgoMaster — concurrency practice", "M"],
-      ]},
     { n: "What is Low Level System Design?",
       note: "<b>Low-Level Design</b> is the detailed design of a component/module: classes, methods, interactions, error handling, and thread-safety. Output of an LLD round: requirements, class diagram, public APIs, and a working (or sketched) implementation.<br><b>HLD</b> = services, DBs, caches, scale. <b>LLD</b> = entities, relationships, what varies, and code.<br>Machine coding = LLD + you type a compiling solution in 60–90 min.",
       p: [
@@ -37,7 +29,6 @@ const LLD = [
       note: "<pre style='font-size:.8rem;line-height:1.45;overflow:auto'>LLD\n├── Overview — what / approach / tips\n├── OOP — classes, relationships, constructors, this, 4 pillars, generics, access\n├── Concurrency — ZeroEvenOdd, FizzBuzz, BBQueue, Philosophers, Crawler\n├── LLD + Concurrency — tickets, cache, Kafka pub-sub, rate limiter\n├── UML · SOLID · patterns\n├── Machine coding — Parking Lot, Elevator, Vending, Splitwise…\n└── LeetCode Design — LRU, MinStack, Twitter, Trie…</pre>",
       p: [
         ["LIST", "https://leetcode.com/problem-list/design/", "LeetCode Design problem list", "M"],
-        ["AM", "https://algomaster.io/practice/low-level-design", "AlgoMaster — LLD practice", "M"],
         ["GFG", "https://www.geeksforgeeks.org/system-design/low-level-design-problems/", "GFG LLD problems", "M"],
       ]},
   ]},
@@ -214,7 +205,6 @@ def work(n):
       p: [
         [1114, "print-in-order", "Print in Order", "E"],
         [1115, "print-foobar-alternately", "Print FooBar Alternately", "M"],
-        ["AM", "https://algomaster.io/practice/concurrency", "AlgoMaster — concurrency practice", "M"],
         ["GFG", "https://www.geeksforgeeks.org/multithreading-python-set-1/", "Multithreading in Python", "M"],
       ]},
     { n: "Print Zero Even Odd",
@@ -868,7 +858,6 @@ ed.text = "bye"; ed.restore(snap)  # 'hi'`,
       note: "<b>Entities:</b> Lot, Floor, Spot (compact/regular/large), Vehicle (bike/car/truck), Ticket, PricingStrategy.<br><b>APIs:</b> <code>park(vehicle) → ticket</code>, <code>unpark(ticket) → fee</code>, <code>available(floor, type)</code>.<br><b>Patterns:</b> Strategy (pricing), Factory (vehicle), Singleton optional (lot). Thread-safe spot assignment. LC 1603 is the toy version (counts only).",
       p: [
         [1603, "design-parking-system", "Design Parking System", "E"],
-        ["AM", "https://algomaster.io/practice/low-level-design", "AlgoMaster — LLD practice (Parking Lot & more)", "M"],
         ["GFG", "https://www.geeksforgeeks.org/system-design/designing-parking-lot-garage-system-system-design/", "Design Parking Lot", "M"],
       ]},
     { n: "Elevator",

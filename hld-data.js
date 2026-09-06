@@ -1,5 +1,5 @@
 /* High-Level Design — one-pager notes + practice / further reading
-   Node: { n, h?, note?, code?, p?: [[num|"GFG"|"HI"|"EDU"|"GH"|"BB"|"DG"|"AM"|"CWA", slug|url, title, "E|M|H"], ...], c?: [...] }
+   Node: { n, h?, note?, code?, p?: [[num|"GFG"|"HI"|"EDU"|"GH"|"BB"|"DG"|"CWA", slug|url, title, "E|M|H"], ...], c?: [...] }
    Outline follows https://codewitharyan.com/system-design/high-level-design
 */
 const HLD = [
@@ -7,13 +7,9 @@ const HLD = [
   { n: "Introduction", h: "HLD is boxes and arrows: services, stores, caches, queues, and how a request flows. LLD is classes inside one box.", c: [
     { n: "Where to study more",
       h: "Use this sheet as the map. Open these when you want a second explanation, a diagram, or a full worked problem.",
-      note: "<b>AlgoMaster</b> — structured course + 30 must-know concepts + practice drills.<br><b>Hello Interview</b> — interview delivery framework, core concepts, and FAANG-style problem breakdowns (Bitly, Uber, YouTube…).<br><b>ByteByteGo</b> — visual explainers (Alex Xu). Best for “what does Kafka look like on a whiteboard.”<br><b>Primer / Educative / Design Gurus</b> — deep text + classic Grokking problems.<br>Tick a link here when you've actually read it — same progress bar as the rest of HLD.",
+      note: "<b>Hello Interview</b> — interview delivery framework, core concepts, and FAANG-style problem breakdowns (Bitly, Uber, YouTube…).<br><b>ByteByteGo</b> — visual explainers (Alex Xu). Best for “what does Kafka look like on a whiteboard.”<br><b>Primer / Educative / Design Gurus</b> — deep text + classic Grokking problems.",
       p: [
-        ["AM", "https://algomaster.io/practice/system-design", "AlgoMaster — system design practice", "M"],
-        ["AM", "https://algomaster.io/learn/system-design/course-introduction", "AlgoMaster — System Design course", "E"],
-        ["AM", "https://algomaster.io/learn/system-design/course-roadmap", "AlgoMaster — course roadmap", "E"],
-        ["AM", "https://algomaster.io/learn/system-design/top-30-system-design-concepts", "AlgoMaster — 30 must-know concepts", "M"],
-        ["GH", "https://github.com/ashishps1/awesome-system-design-resources", "Ashish / AlgoMaster — awesome-system-design-resources", "E"],
+        ["GH", "https://github.com/ashishps1/awesome-system-design-resources", "awesome-system-design-resources", "E"],
         ["HI", "https://www.hellointerview.com/learn/system-design/in-a-hurry/introduction", "Hello Interview — System Design in a Hurry", "E"],
         ["HI", "https://www.hellointerview.com/learn/system-design/in-a-hurry/delivery", "Hello Interview — delivery framework", "M"],
         ["BB", "https://bytebytego.com/", "ByteByteGo — courses & visuals", "E"],
@@ -119,7 +115,6 @@ DOWNLOAD
           p: [
             ["GFG", "https://www.geeksforgeeks.org/system-design/cap-theorem-in-system-design/", "CAP theorem", "E"],
             ["HI", "https://www.hellointerview.com/learn/system-design/core-concepts/cap-theorem", "Hello Interview — CAP", "E"],
-            ["AM", "https://algomaster.io/learn/system-design/top-30-system-design-concepts", "AlgoMaster — 30 concepts (includes CAP)", "E"],
           ]},
         { n: "Vertical and horizontal scaling",
           note: "<b>Vertical</b> — bigger box. Simple until you can't buy a bigger one and failover is a cliff.<br><b>Horizontal</b> — more boxes behind an LB. Needs stateless app or sticky sessions / shared store. Interviews almost always want horizontal.",
@@ -132,7 +127,6 @@ DOWNLOAD
           p: [
             ["GFG", "https://www.geeksforgeeks.org/system-design/consistent-hashing/", "Consistent hashing", "M"],
             ["HI", "https://www.hellointerview.com/learn/system-design/core-concepts/consistent-hashing", "Hello Interview — consistent hashing", "M"],
-            ["AM", "https://algomaster.io/practice/system-design", "AlgoMaster — hashing / quorum drills", "M"],
           ]},
         { n: "Load Balancing",
           note: "Spread traffic across healthy backends. L4 (TCP) vs L7 (HTTP, path/host). Health checks + connection draining. SPOF: run 2+ LBs (DNS or anycast). See algorithms below.",
@@ -269,7 +263,6 @@ storage_tb = 10e6 * 20 * 365 * 5 * 1e3 * 3 / 1e12`,
       p: [
         ["GFG", "https://www.geeksforgeeks.org/system-design/caching-system-design/", "Caching in system design", "E"],
         ["HI", "https://www.hellointerview.com/learn/system-design/core-concepts/caching", "Hello Interview — caching", "M"],
-        ["AM", "https://algomaster.io/learn/system-design/top-30-system-design-concepts", "AlgoMaster — caching in 30 concepts", "E"],
       ]},
     { n: "Write policies",
       note: "<b>Write-through:</b> write cache + DB together — consistent, slower writes.<br><b>Write-back / write-behind:</b> write cache, flush later — fast, risk of loss.<br><b>Write-around:</b> write DB, cache on read — avoids write-heavy pollution.<br>“Write-ahead” in this sheet ≈ WAL: log the mutation before applying (durability), cousin of write-back safety.",
@@ -455,7 +448,6 @@ def snowflake(ms, worker, seq):
           p: [
             ["GFG", "https://www.geeksforgeeks.org/system-design/rate-limiting-system-design/", "Rate limiter HLD", "H"],
             ["HI", "https://www.hellointerview.com/learn/system-design/problem-breakdowns/rate-limiter", "Hello Interview — rate limiter", "H"],
-            ["AM", "https://algomaster.io/learn/system-design-interviews/course-roadmap", "AlgoMaster — system design interviews", "M"],
             [359, "logger-rate-limiter", "LC Logger Rate Limiter (tiny version)", "M"],
           ]},
         { n: "Design URL Shortener",
