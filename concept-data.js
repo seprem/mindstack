@@ -45,8 +45,44 @@ const CONCEPTS = [
       d: "Take <code>n² + 1000n</code>. At n = a million, the n² part is a thousand times bigger than the other. The small term stops mattering, so we write just <b>O(n²)</b>." },
     { t: "Read it off the shape of the code",
       d: "One loop → <b>O(n)</b>. A loop inside a loop → <b>O(n²)</b>. Halving the problem each step → <b>O(log n)</b>. Sorting → <b>O(n log n)</b>. Two recursive calls per level → <b>O(2ⁿ)</b>. Loops one after another <i>add</i>; nested loops <i>multiply</i>." },
+    { t: "Space is measured the same way, and the stack counts",
+      d: "Half of judging an algorithm is memory, and it is the half people forget to state. Count anything that grows with the input: the hash map you built, the array you copied, and the <b>call stack</b>. A recursive solution with no data structures at all is still O(depth) space, which is why a depth of 10⁵ crashes rather than merely slows. Give both numbers unprompted; being asked for the space complexity is a sign you should have said it already." },
     { t: "Always say which case you mean",
-      d: "A hash map is O(1) on <i>average</i> and O(n) at <i>worst</i>. Best, average and worst are three different claims, and interviewers listen for which one you made." },
+      d: "A hash map is O(1) on <i>average</i> and O(n) at <i>worst</i>. Quicksort is O(n log n) average and O(n²) worst. Best, average and worst are three different claims about three different things, and answering with the wrong one is not a rounding error." },
+    { t: "Amortised is a fourth claim, and it is not the average",
+      d: "Average case is about the distribution of <i>inputs</i>: on typical data, this is what happens. <b>Amortised</b> is about a <i>sequence of operations</i>: any n appends cost under 2n in total, so each is O(1), and that is a <b>guarantee</b> rather than a hope. An adversary can defeat an average case by choosing nasty input, and cannot defeat an amortised bound at all. Saying \"average\" when you mean \"amortised\" gives away that the distinction has not landed." },
+  ],
+
+  variants: [
+    { n: "Worst case", cost: "the default, and what O(...) means unqualified",
+      idea: "The most work any input of size n could force. Nothing is assumed about the data.",
+      when: "Always state this one unless you say otherwise. It is what an interviewer means by \"the complexity\".",
+      watch: "It is often driven by an input nobody would ever actually supply, which is exactly why quicksort survives being O(n²) on paper." },
+
+    { n: "Average case", cost: "over a distribution of inputs",
+      idea: "The expected work assuming inputs arrive in some typical spread. Hash maps and quicksort are both sold on this number.",
+      when: "When the worst case is real but pathological, and you can say what typical means.",
+      watch: "It quietly assumes a distribution. An adversary choosing colliding keys or sorted input defeats it, which is why runtimes randomise hashes and pivots." },
+
+    { n: "Amortised", cost: "a guarantee over a sequence, not a hope",
+      idea: "Total cost of n operations divided by n. Dynamic array append is O(1) amortised because the doubling copies sum to under 2n across the whole run.",
+      when: "Anything with occasional expensive rebuilds: growable arrays, hash table resizing, union-find with path compression.",
+      watch: "Not the same as average. This one holds for every sequence, so no input can break it. Say the word out loud." },
+
+    { n: "Best case", cost: "almost never the answer to anything",
+      idea: "The least work some input could require. Insertion sort is O(n) on already-sorted data.",
+      when: "Only when the problem genuinely promises the easy shape, such as nearly-sorted input for Timsort.",
+      watch: "Leading with the best case reads as either evasion or misunderstanding. Volunteer it only as a bonus after the worst case." },
+
+    { n: "Expected, for randomised algorithms", cost: "over the algorithm's own coin flips",
+      idea: "Randomised quicksort and quickselect are O(n log n) and O(n) expected. The randomness is inside the algorithm rather than in the input.",
+      when: "When you deliberately randomise to remove the adversary, which is the whole point of a random pivot.",
+      watch: "Different from average case: here no input can be unlucky, only the coin flips can, and the odds of sustained bad luck are vanishing." },
+
+    { n: "Space complexity", cost: "counted exactly like time",
+      idea: "Extra memory that grows with the input: structures you allocate, plus the recursion stack.",
+      when: "Every single time. Half the follow-up questions in an interview are can you do it in O(1) space.",
+      watch: "The output usually does not count against it, and the call stack usually does. State which convention you are using and nobody can disagree with you." },
   ],
 
   hing: `<p><b>Asli sawaal kya hai?</b> Big-O time nahi naapta, <b>growth</b> naapta hai. Do code likhe, ek 5 second leta hai, doosra 8 second. Isse kuch pata nahi chalta. Sahi sawaal: input 10 guna bada karo, to kaam kitna badhega? 10 guna, ya 100 guna?</p>
@@ -73,6 +109,8 @@ const CONCEPTS = [
     "<b>Hidden loops in library calls.</b> <code>x in my_list</code> is O(n), not O(1). Wrapping it in a loop gives you a silent O(n²).",
     "<b>Averaging over the wrong thing.</b> A single <code>append</code> can be O(n) when the list resizes; it is O(1) <i>amortised</i>. Say the word. It is what they are listening for.",
     "<b>Two separate loops ≠ O(n²).</b> One after the other is O(n) + O(n) = O(n). Only <i>nesting</i> multiplies.",
+    "<b>Giving a loose bound.</b> O is an <i>upper</i> bound, so calling a linear scan O(n²) is technically true and completely useless. Interviewers want the <b>tight</b> bound, which is what Θ means. Nobody will make you write the theta, but they will notice if your answer is not tight.",
+    "<b>Letting the input size hide inside a value.</b> Looping to <code>n</code> where n is the <i>value</i> of an input number, not the length of an array, is exponential in the number of digits. This is why knapsack is called pseudo-polynomial and why it stops being fast when the numbers get big.",
   ],
 
   impl: [
@@ -178,13 +216,19 @@ map.get(k) / set.has(k)   // O(1) average`,
     ["Why does n² + 1000n simplify to O(n²)?", "At large n the biggest term dominates: at n = 10⁶ the n² term is a thousand times larger than 1000n. Big-O describes the limit, so only the fastest-growing term survives."],
     ["Constraint says n ≤ 10⁵. What complexity do you need, and why?", "O(n) or O(n log n). O(n²) would be 10¹⁰ operations ≈ 100 s at ~10⁸ ops/sec → TLE. The constraint is the interviewer telling you the intended complexity."],
     ["Two loops one after the other, O(n) or O(n²)?", "O(n). Sequential work adds (n + n = 2n → O(n)). Only nested loops multiply."],
-    ["What does 'append is O(1) amortised' actually mean?", "A single append is usually O(1) but occasionally O(n) when the array doubles and copies. Averaged over n appends the total is < 2n, so each one costs O(1) on average."],
+    ["What does 'append is O(1) amortised' actually mean?", "A single append is usually O(1) but occasionally O(n) when the array doubles and copies. Averaged over n appends the total is under 2n, so each one costs O(1) across the sequence."],
+    ["What is the difference between average case and amortised?", "Average case is over a distribution of inputs, so a nasty input can defeat it. Amortised is over a sequence of operations and holds for every input, which makes it a guarantee rather than an expectation."],
+    ["How do you count space complexity, and what do people forget?", "Anything that grows with the input, including the call stack. A recursive solution with no data structures is still O(depth) space, which is why deep recursion crashes rather than merely slows."],
   ],
 
   p: [
     ["GFG", "https://www.geeksforgeeks.org/analysis-algorithms-big-o-analysis/", "GFG, Big-O analysis", "E"],
     [1, "two-sum", "Two Sum, state the brute force AND the O(n) cost", "E"],
-    [121, "best-time-to-buy-and-sell-stock", "Best Time to Buy and Sell, O(n²) → O(n)", "E"],
+    [217, "contains-duplicate", "Contains Duplicate, the list to set swap", "E"],
+    [121, "best-time-to-buy-and-sell-stock", "Best Time to Buy and Sell, O(n²) to O(n)", "E"],
+    [242, "valid-anagram", "Valid Anagram, sorting against counting", "E"],
+    [704, "binary-search", "Binary Search, O(n) to O(log n)", "E"],
+    [53, "maximum-subarray", "Maximum Subarray, three complexities for one problem", "M"],
   ],
 },
 
@@ -1071,6 +1115,42 @@ function singleNumber(nums) {
       d: "They quietly keep spare room. <b>append</b> writes into the spare room, fast. When it runs out, they allocate a block twice as big and copy everything, slow, but rare. Over n appends the copies add up to less than 2n, so append averages out to <b>O(1) amortised</b>." },
     { t: "The front is expensive, and that has consequences",
       d: "Inserting or removing at the start shifts every other element to keep the block unbroken, <b>O(n)</b>. If you need both ends to be fast, you need a different layout: a deque. This is why BFS uses one." },
+    { t: "Contiguity also buys speed that Big-O refuses to show you",
+      d: "A CPU never fetches one value, it fetches a <b>cache line</b> of roughly 64 bytes. Neighbouring array elements arrive in the same fetch, so walking an array is close to free per element after the first. Walk a linked list of the same length and every hop can be a separate trip to memory. Both are O(n), and the array can be several times faster in wall-clock time. Big-O deliberately discards constant factors, and this is the constant factor that most often decides which solution actually passes." },
+    { t: "If order does not matter, deletion stops being O(n)",
+      d: "Removing from the middle is expensive only because the gap has to close. When you do not care about order, do not close it: <b>swap the doomed element with the last one and pop the end</b>. That is O(1), and it is how you delete from a collection you are treating as a bag of things rather than a sequence. Most people never learn this and shift a million elements to avoid a swap." },
+  ],
+
+  variants: [
+    { n: "In-place rewrite, the writer index", cost: "O(n) time, O(1) space",
+      idea: "One pointer reads, a slower one writes. Everything before the writer is already the answer.",
+      when: "Removing duplicates, moving zeroes, filtering in place, and anything that says modify the array in place.",
+      watch: "The writer is also the new length when you finish, so no separate counter is needed. See the loop invariants page." },
+
+    { n: "Prefix sums", cost: "O(n) once, then O(1) per range query",
+      idea: "Store every running total, so any range sum becomes a subtraction.",
+      when: "Repeated range questions on data that does not change.",
+      watch: "It has its own page. If the array also changes between queries, you want a Fenwick tree instead." },
+
+    { n: "Rotate by reversal", cost: "O(n) time, O(1) space",
+      idea: "To rotate right by k, reverse the whole array, then reverse the first k, then reverse the rest.",
+      when: "Rotation without an extra buffer, which is the usual follow-up after the obvious O(n) space answer.",
+      watch: "Take k modulo n first, or a rotation larger than the array does nothing useful." },
+
+    { n: "Swap with last", cost: "O(1) delete",
+      idea: "Overwrite the element you want gone with the final element, then shrink by one.",
+      when: "Order is irrelevant: a pool of objects, an unordered bag, a visited list.",
+      watch: "It scrambles the order, so never use it where position carries meaning. If you are iterating forward, do not advance after the swap." },
+
+    { n: "Three-way partition, Dutch national flag", cost: "O(n) time, O(1) space, one pass",
+      idea: "Three pointers split the array into less-than, equal-to and greater-than a pivot, in a single sweep.",
+      when: "Sorting an array with only three distinct values, or partitioning around duplicates in quicksort.",
+      watch: "When you swap with the high pointer, do not advance the cursor: the value you just received has not been examined yet." },
+
+    { n: "Difference array", cost: "O(1) per range update, O(n) to read out",
+      idea: "The mirror of prefix sums. Record +v at the start and -v just past the end, then one prefix pass materialises every value.",
+      when: "Many range updates and one read at the end, such as counting overlapping bookings.",
+      watch: "Only works when all the updates come before all the reads. Interleave them and you need a real range structure." },
   ],
 
   hing: `<p><b>Array asli mein hai kya?</b> Memory ka ek <b>lamba, judaa hua block</b>, sab slots barabar size ke, ek ke baad ek. Bas itna hi.</p>
@@ -1098,6 +1178,7 @@ function singleNumber(nums) {
     "<b>Mutating a list while iterating it</b> skips elements. Iterate over a copy (<code>for x in a[:]</code>) or build a new list.",
     "<b><code>x in a</code> inside a loop</b> is the most common accidental O(n²) in interviews. Convert to a <code>set</code> first.",
     "<b>Slicing copies.</b> <code>a[1:]</code> inside a recursion turns O(n) into O(n²), pass indices instead.",
+    "<b>Sorting when you only wanted the extremes.</b> Sorting to find the minimum, the maximum or the k largest is O(n log n) for something a single pass does in O(n) and a size-k heap does in O(n log k).",
   ],
 
   impl: [
@@ -1225,7 +1306,8 @@ while (i < j) { [a[i], a[j]] = [a[j], a[i]]; i++; j--; }`,
     ["Why is append O(1) amortised but sometimes O(n)?", "The list keeps spare capacity; append usually just writes into it. When full it allocates a double-size block and copies (O(n)). Because it doubles, total copy work over n appends is < 2n → O(1) each on average."],
     ["Why is insert(0, x) O(n)?", "The block must stay contiguous, so every existing element shifts one slot right, n writes."],
     ["What does [[0]*3]*3 actually build?", "One row object referenced three times. Writing to g[0][0] appears to change every row. Use a comprehension to build independent rows."],
-    ["Array and linked list both scan in O(n). Why is the array much faster in practice?", "Cache locality. The CPU fetches ~64 bytes at a time, so neighbouring array elements come for free, while linked-list nodes scattered in memory cost a fetch each."],
+    ["Array and linked list both scan in O(n). Why is the array much faster in practice?", "Cache locality. The CPU fetches ~64 bytes at a time, so neighbouring array elements come for free, while linked-list nodes scattered in memory cost a fetch each. Big-O discards exactly this constant factor."],
+    ["When is deleting from an array O(1)?", "When order does not matter. Swap the element you want gone with the last one and pop the end, so no gap has to close. It scrambles the order, so never do it where position carries meaning."],
   ],
 
   p: [
@@ -1234,6 +1316,8 @@ while (i < j) { [a[i], a[j]] = [a[j], a[i]]; i++; j--; }`,
     [189, "rotate-array", "Rotate Array, the reverse trick", "M"],
     [238, "product-of-array-except-self", "Product Except Self, prefix/suffix", "M"],
     [560, "subarray-sum-equals-k", "Subarray Sum = K, prefix sums + hash", "M"],
+    [283, "move-zeroes", "Move Zeroes, the writer index in its purest form", "E"],
+    [75, "sort-colors", "Sort Colors, three-way partition in one pass", "M"],
   ],
 },
 

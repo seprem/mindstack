@@ -35,8 +35,11 @@ const CONCEPTS = ctx.C, VIZ = ctx.V, DRAW = ctx.D;
     const langs = Object.keys(c.code || {});
     if (langs.length !== 5) problems.push(c.id + " has " + langs.length + " code tabs");
     (c.viz || []).forEach(v => { if (!VIZ[v]) problems.push(c.id + " points at missing visual " + v); });
-    if (c.why.length < 5) problems.push(c.id + " has only " + c.why.length + " reasoning steps");
-    if (c.q.length < 5)   problems.push(c.id + " has only " + c.q.length + " questions");
+    // the floor every page must clear, so a new page cannot land thinner than the set
+    if (c.why.length < 5)   problems.push(c.id + " has only " + c.why.length + " reasoning steps");
+    if (c.q.length < 5)     problems.push(c.id + " has only " + c.q.length + " questions");
+    if (c.traps.length < 4) problems.push(c.id + " has only " + c.traps.length + " traps");
+    if (c.p.length < 5)     problems.push(c.id + " has only " + c.p.length + " practice links");
   }
   test("structure", problems.length === 0,
     CONCEPTS.length + " concepts, " + CONCEPTS.reduce((a,c)=>a+c.q.length,0) + " questions" +
