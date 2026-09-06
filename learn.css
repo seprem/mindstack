@@ -1,0 +1,422 @@
+/* learn.css, shared by concept.html and revise.html.
+
+   Design intent: get out of the way. No cards, no shadows, no gradients, no badges,
+   no progress meters. Hairline rules and whitespace do the separating; the only
+   colour is on the few things that carry meaning. Long-form text is set in a serif
+   at a comfortable measure, because these pages are meant to be read, not scanned. */
+
+:root{
+  --bg:#fcfcfa;
+  --bg-soft:#f4f4f0;
+  --text:#1c1c1a;
+  --text-2:#38382f;
+  --muted:#6e6e66;
+  --faint:#9a9a91;
+  --rule:#e4e3dd;
+  --rule-2:#d6d5cd;
+  --accent:#2f5faa;
+  --accent-soft:#e9f0fa;
+  --warm:#a4551b;
+  --warm-soft:#fbf2e9;
+  --e:#3f7a4a; --m:#8a6410; --h:#9b3a3a;
+  /* the six growth curves, in the order they appear */
+  --vz1:#3f7a4a; --vz2:#2f8f9c; --vz3:#2f5faa; --vz4:#6b4fa8; --vz5:#b4761c; --vz6:#b04242;
+  --code-bg:#1b1c1e;
+  --code-fg:#d6d4cd;
+}
+[data-theme="dark"]{
+  --bg:#131315;
+  --bg-soft:#1a1b1d;
+  --text:#e4e3de;
+  --text-2:#cfcec8;
+  --muted:#96958d;
+  --faint:#6e6e68;
+  --rule:#292a2d;
+  --rule-2:#35363a;
+  --accent:#8fb6ea;
+  --accent-soft:#15202f;
+  --warm:#e0a878;
+  --warm-soft:#251c13;
+  --e:#7fb98a; --m:#c9a03f; --h:#d08585;
+  --vz1:#7fb98a; --vz2:#5fc4cf; --vz3:#8fb6ea; --vz4:#b09ce8; --vz5:#e0a878; --vz6:#e08a8a;
+  --code-bg:#0f1011;
+  --code-fg:#cfcec7;
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;scroll-padding-top:70px}
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:"Inter",system-ui,-apple-system,sans-serif;
+  font-size:16px;
+  line-height:1.6;
+  -webkit-font-smoothing:antialiased;
+  text-rendering:optimizeLegibility;
+}
+a{color:var(--accent);text-underline-offset:2px}
+a:hover{text-decoration-thickness:2px}
+h1,h2,h3,h4{line-height:1.25;font-weight:600;letter-spacing:-.011em}
+
+/* ---------------- top bar ---------------- */
+header.bar{
+  position:sticky;top:0;z-index:30;
+  background:color-mix(in srgb,var(--bg) 92%,transparent);
+  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+  border-bottom:1px solid var(--rule);
+}
+.bar-in{max-width:1120px;margin:0 auto;padding:11px 22px;display:flex;align-items:baseline;gap:18px;flex-wrap:wrap}
+.logo{font-weight:600;font-size:.95rem;color:var(--text);text-decoration:none;letter-spacing:-.01em}
+.here{font-size:.8rem;color:var(--muted)}
+.sp{flex:1}
+.bar-in a.nav,.bar-in button.nav{
+  font-size:.82rem;color:var(--muted);text-decoration:none;background:none;border:0;
+  cursor:pointer;font-family:inherit;padding:2px 0;
+}
+.bar-in a.nav:hover,.bar-in button.nav:hover{color:var(--text)}
+.menu-btn{display:none}
+
+/* ---------------- layout ---------------- */
+.layout{max-width:1120px;margin:0 auto;display:flex;gap:52px;padding:0 22px}
+.side{
+  width:210px;flex:0 0 210px;position:sticky;top:64px;align-self:flex-start;
+  max-height:calc(100vh - 84px);overflow-y:auto;padding:32px 0 40px;
+}
+.side .find{
+  width:100%;padding:6px 0;border:0;border-bottom:1px solid var(--rule);
+  background:none;color:var(--text);font-family:inherit;font-size:.84rem;outline:none;margin-bottom:20px;
+}
+.side .find:focus{border-bottom-color:var(--accent)}
+.side .find::placeholder{color:var(--faint)}
+.side-title{
+  font-size:.68rem;text-transform:uppercase;letter-spacing:.1em;color:var(--faint);
+  font-weight:600;margin:0 0 8px;
+}
+.side-title+.side-title,.nav-list+.side-title{margin-top:24px}
+.nav-list{display:flex;flex-direction:column;margin-bottom:4px}
+.nav-list a{
+  display:block;padding:5px 0 5px 11px;color:var(--muted);text-decoration:none;
+  font-size:.865rem;line-height:1.45;border-left:2px solid transparent;
+  transition:color .15s ease,border-color .15s ease,padding-left .15s ease;
+}
+.nav-list a:hover{color:var(--text);padding-left:14px}
+.nav-list a.active{color:var(--text);border-left-color:var(--accent);font-weight:550}
+.scrim{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:35}
+.scrim.open{display:block}
+main{flex:1;min-width:0;max-width:730px;padding:36px 0 90px}
+
+@media(max-width:900px){
+  .layout{padding:0;gap:0}
+  .side{
+    position:fixed;top:0;left:0;bottom:0;width:255px;background:var(--bg);
+    border-right:1px solid var(--rule);z-index:40;transform:translateX(-100%);
+    transition:transform .2s;max-height:none;padding:22px 20px 40px;
+  }
+  .side.open{transform:none}
+  .menu-btn{display:inline-block}
+  main{padding:26px 22px 70px}
+}
+
+/* ---------------- concept head ---------------- */
+.crumb{font-size:.72rem;text-transform:uppercase;letter-spacing:.11em;color:var(--accent);font-weight:600;margin-bottom:10px}
+h1.ctitle{font-size:2.3rem;font-weight:600;letter-spacing:-.028em;margin-bottom:24px}
+@media(max-width:600px){h1.ctitle{font-size:1.6rem}}
+
+/* the contents strip, plain text, no boxes */
+.toc{
+  font-size:.82rem;color:var(--muted);line-height:2;
+  padding:0 0 26px;border-bottom:1px solid var(--rule);margin-bottom:8px;
+}
+.toc a{color:var(--muted);text-decoration:none;white-space:nowrap}
+.toc a:hover{color:var(--text)}
+.toc .sep{color:var(--rule-2);margin:0 9px}
+
+/* ---------------- sections ---------------- */
+.rung{padding:34px 0;border-bottom:1px solid var(--rule);scroll-margin-top:74px}
+.rung:last-of-type{border-bottom:0}
+.rung>h2{
+  display:flex;align-items:center;gap:12px;
+  font-size:.8rem;font-weight:600;text-transform:uppercase;letter-spacing:.11em;
+  color:var(--text);margin-bottom:20px;
+}
+.rung>h2 .num{
+  font-family:"JetBrains Mono",ui-monospace,monospace;font-size:.95rem;
+  color:var(--accent);font-weight:500;letter-spacing:0;
+}
+/* the rule runs off to the right, so the eye lands on the number first */
+.rung>h2::after{content:"";flex:1;height:1px;background:var(--rule);margin-left:2px}
+
+/* long-form prose */
+.body{
+  font-family:"Source Serif 4","Iowan Old Style",Georgia,serif;
+  font-size:1.08rem;line-height:1.72;color:var(--text-2);max-width:66ch;
+}
+.body p{margin:0 0 14px}
+.body p:last-child{margin-bottom:0}
+.body b,.body strong{font-weight:600;color:var(--text)}
+.body i{font-style:italic}
+.body ul,.body ol{margin:0 0 14px 22px}
+.body li{margin-bottom:6px}
+.body code,code.inl{
+  font-family:"JetBrains Mono",ui-monospace,monospace;font-size:.83em;
+  background:var(--bg-soft);padding:1px 5px;border-radius:3px;color:var(--text);
+  /* keep a chip whole: splitting `s += "b"` across two lines reads as two chips */
+  white-space:nowrap;
+}
+
+/* 1, the recall line */
+.oneline{
+  font-family:"Source Serif 4","Iowan Old Style",Georgia,serif;
+  font-size:1.3rem;line-height:1.55;color:var(--text);max-width:58ch;
+  padding:20px 24px;border-left:3px solid var(--warm);
+  background:var(--warm-soft);border-radius:0 5px 5px 0;
+}
+.oneline b{font-weight:600}
+.oneline code{background:color-mix(in srgb,var(--bg) 65%,transparent)}
+
+/* a drop cap: this is the section you read like a page of a book */
+.rung[data-k="plain"] .body>p:first-of-type::first-letter{
+  float:left;font-size:3.1em;line-height:.82;font-weight:600;
+  padding:.05em .09em 0 0;color:var(--accent);
+}
+
+/* 4, the reasoning chain */
+.chain{list-style:none;margin:0;padding:0;counter-reset:step;max-width:66ch}
+.chain li{position:relative;padding:0 0 24px 34px}
+.chain li:last-child{padding-bottom:0}
+.chain li::before{
+  counter-increment:step;content:counter(step);
+  position:absolute;left:0;top:.35em;
+  font-family:"JetBrains Mono",ui-monospace,monospace;font-size:.74rem;
+  font-weight:500;color:var(--accent);
+}
+/* the step title is the DIRECT child <b>; bold inside the prose below must stay inline */
+.chain li>b{
+  display:block;font-family:"Inter",sans-serif;font-size:.92rem;font-weight:600;
+  color:var(--text);margin-bottom:5px;letter-spacing:-.005em;
+}
+.chain li div b{display:inline;font-weight:600;color:var(--text)}
+.chain li div{
+  font-family:"Source Serif 4","Iowan Old Style",Georgia,serif;
+  font-size:1.05rem;line-height:1.7;color:var(--text-2);
+}
+
+/* the subtopic list: one entry per algorithm in a family */
+.variants{max-width:66ch}
+.variant{padding:16px 0;border-bottom:1px solid var(--rule)}
+.variant:first-child{border-top:1px solid var(--rule)}
+.variant:last-child{border-bottom:0}
+.vhead{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:7px}
+.vhead b{font-family:"Inter",system-ui,sans-serif;font-size:1rem;font-weight:600;color:var(--text)}
+.vcost{
+  font-family:"JetBrains Mono",ui-monospace,monospace;font-size:.74rem;color:var(--accent);
+  margin-left:auto;white-space:nowrap;
+}
+@media(max-width:600px){.vcost{margin-left:0}}
+.vbody{font-size:1.02rem;line-height:1.7;color:var(--text-2)}
+.vwhen,.vwatch{margin-top:7px;font-size:.95rem;color:var(--muted)}
+.vwhen i,.vwatch i{
+  font-family:"Inter",system-ui,sans-serif;font-style:normal;font-size:.72rem;
+  text-transform:uppercase;letter-spacing:.08em;font-weight:600;color:var(--faint);
+  margin-right:7px;
+}
+.variant code{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:.83em;
+  background:var(--bg-soft);padding:1px 5px;border-radius:3px;white-space:nowrap}
+
+/* 5. Hinglish */
+.hing{
+  border-left:2px solid var(--warm);background:var(--warm-soft);
+  padding:18px 20px;max-width:66ch;
+  font-family:"Source Serif 4","Iowan Old Style",Georgia,serif;
+  font-size:1.06rem;line-height:1.75;color:var(--text-2);
+}
+.hing p{margin:0 0 12px}
+.hing p:last-child{margin:0}
+.hing b{color:var(--warm);font-weight:600}
+[data-theme="dark"] .hing b{color:var(--warm)}
+
+/* 6, tables */
+.tbl-title{
+  font-size:.78rem;font-weight:600;text-transform:uppercase;letter-spacing:.1em;
+  color:var(--muted);margin:34px 0 12px;
+}
+table.costs{width:100%;border-collapse:collapse;font-size:.9rem;line-height:1.55}
+.costs th{
+  text-align:left;padding:0 14px 8px 0;font-size:.68rem;text-transform:uppercase;
+  letter-spacing:.09em;color:var(--faint);font-weight:600;border-bottom:1px solid var(--rule-2);
+}
+.costs td{text-align:left;padding:10px 14px 10px 0;border-bottom:1px solid var(--rule);vertical-align:top}
+.costs tr:last-child td{border-bottom:0}
+.costs td:first-child{color:var(--text);white-space:nowrap}
+.costs td:last-child{padding-right:0}
+.costs code{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:.82em;color:var(--accent);white-space:nowrap}
+.costs .why{color:var(--muted)}
+@media(max-width:640px){
+  .costs td:first-child{white-space:normal}
+  .costs code{white-space:normal}
+}
+
+.traps{list-style:none;margin:0;padding:0;max-width:66ch}
+.traps li{
+  position:relative;padding:0 0 12px 20px;font-size:.95rem;line-height:1.65;color:var(--text-2);
+}
+.traps li::before{content:", ";position:absolute;left:0;color:var(--faint)}
+.traps li:last-child{padding-bottom:0}
+.traps b{color:var(--text);font-weight:600}
+.traps code{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:.85em;background:var(--bg-soft);padding:1px 5px;border-radius:3px;white-space:nowrap}
+
+/* 7, code */
+.langtabs{display:flex;gap:20px;margin-bottom:14px;flex-wrap:wrap;border-bottom:1px solid var(--rule)}
+.langtabs button{transition:color .15s ease,border-color .15s ease;
+  background:none;border:0;border-bottom:2px solid transparent;margin-bottom:-1px;
+  padding:0 0 8px;font-family:inherit;font-size:.83rem;font-weight:500;
+  color:var(--muted);cursor:pointer;
+}
+.langtabs button:hover{color:var(--text)}
+.langtabs button.on{color:var(--text);border-bottom-color:var(--accent);font-weight:600}
+pre.code{
+  margin:0;background:var(--code-bg);color:var(--code-fg);
+  padding:18px 20px;border-radius:4px;
+  font-family:"JetBrains Mono",ui-monospace,monospace;
+  font-size:.795rem;line-height:1.72;overflow-x:auto;white-space:pre;
+}
+/* the nowrap on inline code must never reach a code BLOCK, or every newline
+   in the listing collapses and the whole program renders on one line */
+pre.code code{background:none!important;padding:0;font-size:inherit;color:inherit;white-space:pre}
+.codecap{font-size:.88rem;color:var(--muted);margin-top:12px;max-width:64ch;line-height:1.6}
+
+/* 8, check yourself */
+.cards{max-width:66ch}
+.qa{border-bottom:1px solid var(--rule);padding:14px 0}
+.qa:first-child{border-top:1px solid var(--rule)}
+.qa .qq{
+  display:flex;gap:12px;align-items:baseline;cursor:pointer;
+  font-size:.98rem;font-weight:500;color:var(--text);line-height:1.55;
+}
+.qa .qq::after{content:"+";margin-left:auto;color:var(--accent);font-weight:400;flex-shrink:0;transition:transform .18s ease}
+.qa.open .qq::after{content:"−";transform:rotate(180deg)}
+.qa .qn{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:.72rem;color:var(--faint);flex-shrink:0}
+.qa .aa{
+  display:none;margin:10px 0 2px 26px;
+  font-family:"Source Serif 4","Iowan Old Style",Georgia,serif;
+  font-size:1.02rem;line-height:1.7;color:var(--text-2);
+}
+.qa.open .aa{display:block}
+
+/* 9, practice + external links */
+.links{list-style:none;margin:0;padding:0;max-width:66ch}
+.links li{padding:9px 0;border-bottom:1px solid var(--rule);display:flex;gap:12px;align-items:baseline}
+.links li:first-child{border-top:1px solid var(--rule)}
+.links a{color:var(--text);text-decoration:none;flex:1;transition:color .15s ease}
+.links a:hover{color:var(--accent);text-decoration:underline}
+.links .src{
+  font-family:"JetBrains Mono",ui-monospace,monospace;font-size:.72rem;color:var(--faint);
+  flex-shrink:0;min-width:44px;
+}
+.links .diff{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:.7rem;flex-shrink:0}
+.diff.E{color:var(--e)}.diff.M{color:var(--m)}.diff.H{color:var(--h)}
+
+/* ---------------- the visual player ---------------- */
+.viz{border:1px solid var(--rule);border-radius:4px;overflow:hidden;background:var(--bg)}
+.vizwrap+.vizwrap{margin-top:22px}
+.vizstage{padding:20px 16px;display:block;width:100%;overflow-x:auto}
+.vizstage svg{width:100%;height:auto;display:block;max-height:330px;min-width:280px}
+.vizcap{
+  padding:14px 18px;border-top:1px solid var(--rule);background:var(--bg-soft);
+  font-family:"Source Serif 4","Iowan Old Style",Georgia,serif;
+  font-size:1rem;line-height:1.65;color:var(--text-2);min-height:56px;
+}
+.vizcap b{color:var(--text);font-weight:600}
+.vizcap code{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:.82em;background:var(--bg);padding:1px 5px;border-radius:3px;white-space:nowrap}
+.vizbar{display:flex;align-items:center;gap:16px;padding:10px 18px;border-top:1px solid var(--rule)}
+.vizbar button{
+  background:none;border:0;padding:0;font-family:inherit;font-size:.8rem;
+  color:var(--muted);cursor:pointer;
+}
+.vizbar button:hover{color:var(--text)}
+.vizbar input[type=range]{flex:1;min-width:80px;accent-color:var(--accent);height:2px}
+.vizbar .step{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:.72rem;color:var(--faint);min-width:40px;text-align:right}
+
+/* svg classes, driven by the theme tokens */
+.v-box{fill:var(--bg-soft);stroke:var(--rule-2);stroke-width:1.25}
+.v-box.on{fill:var(--accent-soft);stroke:var(--accent)}
+.v-box.hot{fill:var(--warm-soft);stroke:var(--warm)}
+.v-box.bad{fill:none;stroke:var(--h);stroke-dasharray:4 3}
+.v-box.dim{opacity:.3}
+.v-txt{fill:var(--text);font-family:"JetBrains Mono",ui-monospace,monospace;font-size:14px;font-weight:500;text-anchor:middle;dominant-baseline:middle}
+.v-txt.dim{opacity:.3}
+.v-idx{fill:var(--faint);font-family:"JetBrains Mono",ui-monospace,monospace;font-size:10px;text-anchor:middle}
+.v-lab{fill:var(--accent);font-family:"Inter",sans-serif;font-size:11px;font-weight:600;text-anchor:middle}
+.v-lab.b{fill:var(--warm)}
+.v-note{fill:var(--muted);font-family:"Inter",sans-serif;font-size:12px}
+.v-line{stroke:var(--rule-2);stroke-width:1.25;fill:none}
+.v-line.on{stroke:var(--accent)}
+.v-band{fill:var(--accent);opacity:.11}
+.v-curve{fill:none;stroke-width:2.4;stroke-linecap:round}
+
+/* ---------------- type roles ----------------
+   The serif is for reading prose. Anything you operate or scan, tabs, player
+   controls, tables, link lists, the question you are about to answer. Is UI and
+   belongs in the sans. These all sit inside .body, so they must say so explicitly. */
+.langtabs button,
+.vizbar button,.vizbar .step,
+.tbl-title,
+table.costs,table.costs th,table.costs td,
+.links,.links a,.links .src,.links .diff,
+.qa .qq{font-family:"Inter",system-ui,sans-serif}
+.qa .aa{font-family:"Source Serif 4","Iowan Old Style",Georgia,serif}
+
+/* a quiet scrollbar for long code lines, instead of a bright slab */
+pre.code{scrollbar-width:thin;scrollbar-color:#4a4b50 transparent}
+pre.code::-webkit-scrollbar{height:8px}
+pre.code::-webkit-scrollbar-track{background:transparent}
+pre.code::-webkit-scrollbar-thumb{background:#3a3b40;border-radius:99px}
+pre.code::-webkit-scrollbar-thumb:hover{background:#55565c}
+
+/* ---------------- pager ---------------- */
+.pager{display:flex;gap:28px;margin-top:44px;padding-top:26px;border-top:1px solid var(--rule)}
+.pager a{flex:1;text-decoration:none;color:var(--text);font-size:.95rem;line-height:1.45;transition:color .15s ease}
+.pager a span{display:block;font-size:.72rem;color:var(--faint);text-transform:uppercase;letter-spacing:.09em;margin-bottom:4px}
+.pager a:hover{color:var(--accent)}
+.pager a.next{text-align:right}
+
+/* ---------------- revision page ---------------- */
+.reading{max-width:760px;margin:0 auto;padding:44px 22px 90px}
+.reading h1{font-size:2rem;font-weight:600;letter-spacing:-.024em;margin-bottom:12px}
+.lede{
+  font-family:"Source Serif 4","Iowan Old Style",Georgia,serif;
+  font-size:1.1rem;line-height:1.7;color:var(--muted);max-width:62ch;
+}
+.tools{display:flex;gap:20px;align-items:center;flex-wrap:wrap;margin:32px 0 0;padding-bottom:12px;border-bottom:1px solid var(--rule)}
+.tools input{
+  flex:1;min-width:150px;padding:6px 0;border:0;background:none;color:var(--text);
+  font-family:inherit;font-size:.9rem;outline:none;
+}
+.tools input::placeholder{color:var(--faint)}
+.tools button{background:none;border:0;padding:0;font-family:inherit;font-size:.82rem;color:var(--muted);cursor:pointer}
+.tools button:hover{color:var(--text)}
+
+.grp{
+  font-size:.7rem;text-transform:uppercase;letter-spacing:.11em;color:var(--faint);
+  font-weight:600;margin:40px 0 4px;
+}
+.entry{padding:24px 0;border-bottom:1px solid var(--rule)}
+.entry.hidden{display:none}
+.entry h3{font-size:1.02rem;font-weight:600;margin-bottom:8px}
+.entry h3 a{color:var(--text);text-decoration:none}
+.entry h3 a:hover{color:var(--accent)}
+.entry .one{
+  font-family:"Source Serif 4","Iowan Old Style",Georgia,serif;
+  font-size:1.06rem;line-height:1.7;color:var(--text-2);max-width:64ch;
+}
+.entry .one b{font-weight:600;color:var(--text)}
+.entry .one code{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:.82em;background:var(--bg-soft);padding:1px 5px;border-radius:3px;white-space:nowrap}
+.entry .more{background:none;border:0;padding:0;margin-top:12px;font-family:inherit;font-size:.8rem;color:var(--muted);cursor:pointer}
+.entry .more:hover{color:var(--text)}
+.entry .cards{margin-top:14px}
+.entry .cards.hidden{display:none}
+.empty{padding:48px 0;color:var(--muted);font-size:.95rem}
+
+footer{max-width:1120px;margin:0 auto;padding:24px 22px 44px;border-top:1px solid var(--rule);color:var(--faint);font-size:.8rem}
+footer a{color:var(--muted);text-decoration:none}
+footer a:hover{color:var(--text)}

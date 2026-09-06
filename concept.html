@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Concepts</title>
+  <meta name="description" content="First-principles notes on data structures and algorithms: a stepped visual, plain words, the reasoning, a Hinglish explanation, costs, traps, code in five languages, and questions to check yourself." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/styles/github-dark.min.css" />
+  <script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/highlight.min.js"></script>
+  <link rel="stylesheet" href="learn.css" />
+</head>
+<body>
+  <header class="bar">
+    <div class="bar-in">
+      <button class="nav menu-btn" id="menuBtn" aria-label="Concept list">Contents</button>
+      <a class="logo" href="index.html">Mindstack</a>
+      <span class="here">Concepts</span>
+      <div class="sp"></div>
+      <a class="nav" href="revise.html">Revision</a>
+      <a class="nav" href="dsa-notes.html">DSA notes</a>
+      <button class="nav" id="themeToggle">Dark</button>
+    </div>
+  </header>
+
+  <div class="scrim" id="scrim"></div>
+
+  <div class="layout">
+    <aside class="side" id="side">
+      <input class="find" id="q" placeholder="Find a concept" aria-label="Find a concept" />
+      <div id="nav"></div>
+    </aside>
+    <main id="main"></main>
+  </div>
+
+  <footer><a href="index.html">Mindstack</a> · <a href="revise.html">Revision</a></footer>
+
+  <script src="viz.js"></script>
+  <script src="concept-data.js"></script>
+  <script>
+  (function () {
+    const $ = s => document.querySelector(s);
+    const LC = s => s.startsWith("http") ? s : "https://leetcode.com/problems/" + s + "/";
+    const esc = s => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;");
+    const el = (tag, cls, html) => {
+      const e = document.createElement(tag);
+      if (cls) e.className = cls;
+      if (html != null) e.innerHTML = html;
+      return e;
+    };
+
+    const LANGS = [["pseudo", "Pseudocode"], ["py", "Python"], ["java", "Java"], ["cpp", "C++"], ["js", "JavaScript"]];
+    const HLJS  = { pseudo: "plaintext", py: "python", java: "java", cpp: "cpp", js: "javascript" };
+    let lang = localStorage.getItem("ms-lang") || "pseudo";   // a view preference, not progress
+
+    const current = CONCEPTS.find(c => c.id === new URLSearchParams(location.search).get("c")) || CONCEPTS[0];
+    document.title = current.n;
+
+    /* ---------------- sidebar ---------------- */
+    const nav = $("#nav");
+    [...new Set(CONCEPTS.map(c => c.group))].forEach(g => {
+      nav.appendChild(el("div", "side-title", esc(g)));
+      const list = el("div", "nav-list");
+      CONCEPTS.filter(c => c.group === g).forEach(c => {
+        const a = el("a", c.id === current.id ? "active" : "", esc(c.n));
+        a.href = "concept.html?c=" + c.id;
+        a.dataset.hay = (c.n + " " + c.group).toLowerCase();
+        list.appendChild(a);
+      });
+      nav.appendChild(list);
+    });
+    $("#q").addEventListener("input", e => {
+      const v = e.target.value.trim().toLowerCase();
+      nav.querySelectorAll(".nav-list a").forEach(a => {
+        a.style.display = !v || a.dataset.hay.includes(v) ? "" : "none";
+      });
+    });
+
+    /* ---------------- the fixed order of sections ---------------- */
+    const SECTIONS = [
+      { k: "one",   id: "one",      t: "In one line" },
+      { k: "viz",   id: "see",      t: "See it work" },
+      { k: "plain", id: "plain",    t: "In plain words" },
+      { k: "why",   id: "why",      t: "Why it works" },
+      { k: "variants", id: "family", t: "Which one, and when" },
+      { k: "hing",  id: "hinglish", t: "In Hinglish" },
+      { k: "costs", id: "costs",    t: "Costs and traps" },
+      { k: "code",  id: "code",     t: "The template" },
+      { k: "q",     id: "check",    t: "Check yourself" },
+      { k: "p",     id: "practice", t: "Practice" },
+    ];
+
+    const main = $("#main");
+    main.appendChild(el("div", "crumb", esc(current.group)));
+    main.appendChild(el("h1", "ctitle", esc(current.n)));
+
+    const present = SECTIONS.filter(s => {
+      const v = current[s.k];
+      return v && (!Array.isArray(v) || v.length);
+    });
+    main.appendChild(el("nav", "toc", present.map(s =>
+      `<a href="#${s.id}">${esc(s.t)}</a>`).join('<span class="sep">·</span>')));
+
+    function section(s, build) {
+      const sec = el("section", "rung");
+      sec.id = s.id;
+      sec.dataset.k = s.k;            // lets the stylesheet treat a section specially
+                                      // (the drop cap on "in plain words", for one)
+      sec.appendChild(el("h2", null,
+        `<span class="num">${String(present.indexOf(s) + 1).padStart(2, "0")}</span>${esc(s.t)}`));
+      const body = el("div", "body");
+      build(body);
+      sec.appendChild(body);
+      main.appendChild(sec);
+    }
+
+    present.forEach(s => {
+      const v = current[s.k];
+
+      if (s.k === "one") return section(s, b => { b.appendChild(el("div", "oneline", v)); });
+
+      if (s.k === "viz") return section(s, b => {
+        v.forEach(id => { const w = el("div", "vizwrap"); b.appendChild(w); mountViz(id, w); });
+        if (current.see && current.see.length) {
+          b.appendChild(el("div", "tbl-title", "Elsewhere"));
+          b.appendChild(el("ul", "links", current.see.map(([src, url, title]) =>
+            `<li><span class="src">${esc(src)}</span><a href="${url}" target="_blank" rel="noopener">${esc(title)}</a></li>`).join("")));
+        }
+      });
+
+      if (s.k === "plain") return section(s, b => { b.innerHTML = v; });
+
+      if (s.k === "why") return section(s, b => {
+        b.appendChild(el("ol", "chain", v.map(step => `<li><b>${step.t}</b><div>${step.d}</div></li>`).join("")));
+      });
+
+      if (s.k === "variants") return section(s, b => {
+        b.appendChild(el("div", "variants", v.map(x =>
+          `<div class="variant">` +
+            `<div class="vhead"><b>${esc(x.n)}</b><span class="vcost">${esc(x.cost)}</span></div>` +
+            `<div class="vbody">${x.idea}` +
+            (x.when  ? `<div class="vwhen"><i>Reach for it when</i> ${x.when}</div>`  : "") +
+            (x.watch ? `<div class="vwatch"><i>Watch out</i> ${x.watch}</div>` : "") +
+          `</div></div>`).join("")));
+      });
+
+      if (s.k === "hing") return section(s, b => { b.appendChild(el("div", "hing", v)); });
+
+      if (s.k === "costs") return section(s, b => {
+        b.appendChild(el("table", "costs",
+          `<thead><tr><th>Operation</th><th>Cost</th><th>Why</th></tr></thead><tbody>` +
+          v.map(([op, cost, why]) => `<tr><td>${op}</td><td><code>${esc(cost)}</code></td><td class="why">${why}</td></tr>`).join("") +
+          `</tbody></table>`));
+        if (current.traps && current.traps.length) {
+          b.appendChild(el("div", "tbl-title", "⚠️ Traps"));
+          b.appendChild(el("ul", "traps", current.traps.map(t => `<li>${t}</li>`).join("")));
+        }
+        if (current.impl && current.impl.length) {
+          b.appendChild(el("div", "tbl-title", "In your language"));
+          b.appendChild(el("table", "costs",
+            `<thead><tr><th>Language</th><th>What it is called</th><th>What to watch for</th></tr></thead><tbody>` +
+            current.impl.map(([l, api, note]) =>
+              `<tr><td>${esc(l)}</td><td><code>${esc(api)}</code></td><td class="why">${esc(note)}</td></tr>`).join("") +
+            `</tbody></table>`));
+        }
+      });
+
+      if (s.k === "code") return section(s, b => {
+        const tabs = el("div", "langtabs");
+        const pre = el("pre", "code");
+        const codeEl = document.createElement("code");
+        pre.appendChild(codeEl);
+
+        function show(k) {
+          lang = v[k] ? k : "pseudo";
+          localStorage.setItem("ms-lang", lang);
+          tabs.querySelectorAll("button").forEach(btn => btn.classList.toggle("on", btn.dataset.k === lang));
+          codeEl.className = "language-" + HLJS[lang];
+          codeEl.removeAttribute("data-highlighted");
+          codeEl.textContent = v[lang];
+          if (window.hljs) { try { hljs.highlightElement(codeEl); } catch (e) {} }
+        }
+        LANGS.forEach(([k, label]) => {
+          if (!v[k]) return;
+          const btn = document.createElement("button");
+          btn.dataset.k = k; btn.textContent = label;
+          btn.addEventListener("click", () => show(k));
+          tabs.appendChild(btn);
+        });
+        b.appendChild(tabs);
+        b.appendChild(pre);
+        if (current.codecap) b.appendChild(el("div", "codecap", esc(current.codecap)));
+        show(lang);
+      });
+
+      if (s.k === "q") return section(s, b => {
+        const wrap = el("div", "cards");
+        v.forEach(([q, a], i) => {
+          const item = el("div", "qa",
+            `<div class="qq"><span class="qn">${String(i + 1).padStart(2, "0")}</span><span>${esc(q)}</span></div>` +
+            `<div class="aa">${esc(a)}</div>`);
+          item.querySelector(".qq").addEventListener("click", () => item.classList.toggle("open"));
+          wrap.appendChild(item);
+        });
+        b.appendChild(wrap);
+      });
+
+      if (s.k === "p") return section(s, b => {
+        b.appendChild(el("ul", "links", v.map(([num, href, title, diff]) => {
+          const isNum = typeof num === "number";
+          return `<li><span class="src">${isNum ? "#" + num : esc(num)}</span>` +
+                 `<a href="${LC(href)}" target="_blank" rel="noopener">${esc(title)}</a>` +
+                 `<span class="diff ${diff}">${diff}</span></li>`;
+        }).join("")));
+      });
+    });
+
+    /* ---------------- previous / next ---------------- */
+    const i = CONCEPTS.indexOf(current);
+    const pager = el("nav", "pager");
+    if (i > 0) {
+      const a = el("a", null, `<span>Previous</span>${esc(CONCEPTS[i - 1].n)}`);
+      a.href = "concept.html?c=" + CONCEPTS[i - 1].id;
+      pager.appendChild(a);
+    }
+    if (i < CONCEPTS.length - 1) {
+      const a = el("a", "next", `<span>Next</span>${esc(CONCEPTS[i + 1].n)}`);
+      a.href = "concept.html?c=" + CONCEPTS[i + 1].id;
+      pager.appendChild(a);
+    }
+    if (pager.children.length) main.appendChild(pager);
+
+    /* ---------------- chrome ---------------- */
+    const side = $("#side"), scrim = $("#scrim");
+    const toggleSide = () => { side.classList.toggle("open"); scrim.classList.toggle("open"); };
+    $("#menuBtn").addEventListener("click", toggleSide);
+    scrim.addEventListener("click", toggleSide);
+
+    const t = $("#themeToggle"), root = document.documentElement;
+    const saved = localStorage.getItem("dsa-theme");
+    const setLabel = () => { t.textContent = root.getAttribute("data-theme") === "dark" ? "Light" : "Dark"; };
+    if (saved === "dark" || (!saved && matchMedia("(prefers-color-scheme: dark)").matches)) root.setAttribute("data-theme", "dark");
+    setLabel();
+    t.addEventListener("click", () => {
+      const dark = root.getAttribute("data-theme") === "dark";
+      if (dark) { root.removeAttribute("data-theme"); localStorage.setItem("dsa-theme", "light"); }
+      else      { root.setAttribute("data-theme", "dark"); localStorage.setItem("dsa-theme", "dark"); }
+      setLabel();
+    });
+  })();
+  </script>
+</body>
+</html>

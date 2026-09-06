@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Mindstack — Interview Prep Hub</title>
-  <meta name="description" content="Prem Tiwari's interview prep hub: DSA notes, one-day cheat sheet, patterns, system design, HR, and AI." />
+  <title>Mindstack. Interview Prep Hub</title>
+  <meta name="description" content="Interview prep notes: concepts from first principles, DSA, system design, and HR." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
@@ -15,42 +15,63 @@
     <div class="nav-in">
       <a href="index.html" class="brand">
         <div class="brand-mark">Mind<span>stack</span></div>
-        <div class="brand-sub">interview prep hub</div>
+        <div class="brand-sub">interview prep</div>
       </a>
       <div class="sp"></div>
-      <a class="btn" href="https://seprem.github.io/my/">Portfolio</a>
-      <button class="btn" id="themeToggle" aria-label="Toggle dark mode">🌙</button>
+      <button class="btn" id="themeToggle" aria-label="Toggle dark mode">Dark</button>
     </div>
   </nav>
 
   <div class="wrap">
     <header class="hero">
-      <h1>What do you want to study?</h1>
-      <p>Notes, cheat sheets, and roadmaps in one place. DSA, LLD, HLD, and HR are live; AI lands here next.</p>
+      <h1>Interview prep</h1>
+      <p>Two ways in: <b>Concept Lab</b> to actually understand something from first principles, <b>Rapid Revision</b> to keep it. Plus the DSA, LLD, HLD and HR sheets.</p>
     </header>
 
     <div class="index">
       <details class="section" open>
         <summary>
           <span class="chev">▶</span>
-          <span class="sec-icon">📚</span>
+          <div class="sec-copy">
+            <h2>Learn &amp; Revise</h2>
+            <p>Understand a concept from first principles in a day, then revise it in ten minutes</p>
+          </div>
+        </summary>
+        <div class="kids">
+          <a class="item" href="concept.html">
+            <div class="item-copy">
+              <strong>Concept Lab</strong>
+              <span>One concept per page: animated visual → plain words → first-principles derivation → Hinglish deep-dive → costs, traps, code in 5 languages, self-test</span>
+            </div>
+            <span class="arrow">→</span>
+          </a>
+          <a class="item" href="revise.html">
+            <div class="item-copy">
+              <strong>Rapid Revision</strong>
+              <span>Every concept as one recall line plus flip cards, mark what is shaky and revise only that</span>
+            </div>
+            <span class="arrow">→</span>
+          </a>
+        </div>
+      </details>
+
+      <details class="section">
+        <summary>
+          <span class="chev">▶</span>
           <div class="sec-copy">
             <h2>DSA</h2>
             <p>Topic notes, a one-day revision sheet, and the patterns roadmap</p>
           </div>
-          <span class="badge live">Live</span>
         </summary>
         <div class="kids">
           <a class="item" href="dsa-notes.html">
-            <span class="item-dot"></span>
             <div class="item-copy">
               <strong>DSA Notes</strong>
-              <span>Study one topic at a time — brief notes, short code, practice questions</span>
+              <span>Study one topic at a time, brief notes, short code, practice questions</span>
             </div>
             <span class="arrow">→</span>
           </a>
           <a class="item" href="dsa-sheet.html">
-            <span class="item-dot"></span>
             <div class="item-copy">
               <strong>DSA one day sheet</strong>
               <span>Deep revision: properties, Python templates, diagrams, must-know algorithms</span>
@@ -58,7 +79,6 @@
             <span class="arrow">→</span>
           </a>
           <a class="item" href="dsa-patterns.html">
-            <span class="item-dot"></span>
             <div class="item-copy">
               <strong>Pattern</strong>
               <span>Patterns roadmap with curated Easy / Medium / Hard LeetCode problems</span>
@@ -71,16 +91,13 @@
       <details class="section">
         <summary>
           <span class="chev">▶</span>
-          <span class="sec-icon">🏗️</span>
           <div class="sec-copy">
             <h2>System Design</h2>
             <p>Low-level and high-level design notes</p>
           </div>
-          <span class="badge live">Live</span>
         </summary>
         <div class="kids">
           <a class="item" href="lld.html">
-            <span class="item-dot"></span>
             <div class="item-copy">
               <strong>LLD</strong>
               <span>OOP, concurrency, patterns, machine coding, and LeetCode Design</span>
@@ -88,7 +105,6 @@
             <span class="arrow">→</span>
           </a>
           <a class="item" href="hld.html">
-            <span class="item-dot"></span>
             <div class="item-copy">
               <strong>HLD</strong>
               <span>Scalability, databases, caching, APIs, and interview problems</span>
@@ -100,24 +116,22 @@
 
       <a class="section solo" href="hr.html">
         <div class="leaf-row">
-          <span class="sec-icon">💬</span>
           <div class="sec-copy">
             <h2>HR</h2>
             <p>STAR, why this company, why leaving, salary, and what to ask</p>
           </div>
-          <span class="badge live">Live</span>
+          
           <span class="arrow">→</span>
         </div>
       </a>
 
       <a class="section solo" href="ai.html">
         <div class="leaf-row">
-          <span class="sec-icon">✨</span>
           <div class="sec-copy">
             <h2>AI</h2>
             <p>ML / LLM interview notes and practical building blocks</p>
           </div>
-          <span class="badge soon">Soon</span>
+          <span class="badge">not yet</span>
           <span class="arrow">→</span>
         </div>
       </a>
@@ -125,7 +139,7 @@
   </div>
 
   <footer>
-    © <span id="year"></span> Prem Tiwari · <a href="https://seprem.github.io/my/">Portfolio</a>
+    <a href="concept.html">Concepts</a> · <a href="revise.html">Revision</a>
   </footer>
 
   <script src="script.js"></script>

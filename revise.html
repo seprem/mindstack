@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Revision</title>
+  <meta name="description" content="Every concept as the one line worth remembering, with questions to answer out loud before you check." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="learn.css" />
+</head>
+<body>
+  <header class="bar">
+    <div class="bar-in">
+      <a class="logo" href="index.html">Mindstack</a>
+      <span class="here">Revision</span>
+      <div class="sp"></div>
+      <a class="nav" href="concept.html">Concepts</a>
+      <a class="nav" href="dsa-notes.html">DSA notes</a>
+      <button class="nav" id="themeToggle">Dark</button>
+    </div>
+  </header>
+
+  <div class="reading">
+    <h1>Revision</h1>
+    <p class="lede">Every concept reduced to the one sentence worth remembering. Read a line, then answer its questions <em>out loud</em> before you open them, anything you fumble is a concept to reopen in full, not to re-read here.</p>
+
+    <div class="tools">
+      <input id="find" placeholder="Filter concepts" aria-label="Filter concepts" />
+      <button id="toggleAll">Open all questions</button>
+    </div>
+
+    <div id="list"></div>
+    <div class="empty" id="empty" style="display:none">Nothing matches that.</div>
+  </div>
+
+  <footer><a href="index.html">Mindstack</a> · <a href="concept.html">Concepts</a></footer>
+
+  <script src="concept-data.js"></script>
+  <script>
+  (function () {
+    const $ = s => document.querySelector(s);
+    const esc = s => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;");
+    const list = $("#list");
+    let allOpen = false;
+
+    [...new Set(CONCEPTS.map(c => c.group))].forEach(g => {
+      const h = document.createElement("div");
+      h.className = "grp"; h.textContent = g; h.dataset.grp = g;
+      list.appendChild(h);
+
+      CONCEPTS.filter(c => c.group === g).forEach(c => {
+        const entry = document.createElement("div");
+        entry.className = "entry";
+        entry.dataset.id = c.id;
+        entry.dataset.hay = (c.n + " " + c.group + " " + c.one).toLowerCase();
+        entry.innerHTML =
+          `<h3><a href="concept.html?c=${c.id}">${esc(c.n)}</a></h3>` +
+          `<div class="one">${c.one}</div>` +
+          `<button class="more">${c.q.length} questions</button>` +
+          `<div class="cards hidden"></div>`;
+
+        const cards = entry.querySelector(".cards");
+        c.q.forEach(([q, a], i) => {
+          const item = document.createElement("div");
+          item.className = "qa";
+          item.innerHTML =
+            `<div class="qq"><span class="qn">${String(i + 1).padStart(2, "0")}</span><span>${esc(q)}</span></div>` +
+            `<div class="aa">${esc(a)}</div>`;
+          item.querySelector(".qq").addEventListener("click", () => item.classList.toggle("open"));
+          cards.appendChild(item);
+        });
+
+        const more = entry.querySelector(".more");
+        more.addEventListener("click", () => {
+          cards.classList.toggle("hidden");
+          more.textContent = cards.classList.contains("hidden") ? c.q.length + " questions" : "Hide questions";
+        });
+
+        list.appendChild(entry);
+      });
+    });
+
+    $("#find").addEventListener("input", e => {
+      const v = e.target.value.trim().toLowerCase();
+      let shown = 0;
+      list.querySelectorAll(".entry").forEach(en => {
+        const ok = !v || en.dataset.hay.includes(v);
+        en.classList.toggle("hidden", !ok);
+        if (ok) shown++;
+      });
+      list.querySelectorAll(".grp").forEach(h => {
+        const any = [...list.querySelectorAll(`.entry`)].some(en =>
+          !en.classList.contains("hidden") &&
+          CONCEPTS.find(c => c.id === en.dataset.id).group === h.dataset.grp);
+        h.style.display = any ? "" : "none";
+      });
+      $("#empty").style.display = shown ? "none" : "";
+    });
+
+    $("#toggleAll").addEventListener("click", () => {
+      allOpen = !allOpen;
+      list.querySelectorAll(".cards").forEach(c => c.classList.toggle("hidden", !allOpen));
+      list.querySelectorAll(".qa").forEach(q => q.classList.toggle("open", allOpen));
+      list.querySelectorAll(".entry").forEach(en => {
+        const n = CONCEPTS.find(c => c.id === en.dataset.id).q.length;
+        en.querySelector(".more").textContent = allOpen ? "Hide questions" : n + " questions";
+      });
+      $("#toggleAll").textContent = allOpen ? "Close all questions" : "Open all questions";
+    });
+
+    const t = $("#themeToggle"), root = document.documentElement;
+    const saved = localStorage.getItem("dsa-theme");
+    const setLabel = () => { t.textContent = root.getAttribute("data-theme") === "dark" ? "Light" : "Dark"; };
+    if (saved === "dark" || (!saved && matchMedia("(prefers-color-scheme: dark)").matches)) root.setAttribute("data-theme", "dark");
+    setLabel();
+    t.addEventListener("click", () => {
+      const dark = root.getAttribute("data-theme") === "dark";
+      if (dark) { root.removeAttribute("data-theme"); localStorage.setItem("dsa-theme", "light"); }
+      else      { root.setAttribute("data-theme", "dark"); localStorage.setItem("dsa-theme", "dark"); }
+      setLabel();
+    });
+  })();
+  </script>
+</body>
+</html>
