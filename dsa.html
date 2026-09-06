@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DSA Patterns — LeetCode Roadmap</title>
+  <meta name="description" content="A structured DSA patterns roadmap: topics, patterns, and curated Easy/Medium/Hard LeetCode problems." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/styles/github-dark.min.css" />
+  <script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/highlight.min.js"></script>
+  <style>
+    :root {
+      --bg:#f4f5fb; --surface:#ffffff; --surface-2:#f0f2f9; --text:#1e2230; --muted:#6b7280;
+      --primary:#6d5efc; --primary-2:#8b7bff; --primary-soft:#efeafe; --border:#e7e9f2;
+      --accent:#0ea5b7; --accent-soft:#e2f6f8;
+      --e:#15a349; --e-bg:#e4f8ec; --m:#e08600; --m-bg:#fdf1dc; --h:#e23b52; --h-bg:#fdeaed;
+      --shadow:0 10px 30px rgba(30,34,48,.08); --shadow-sm:0 2px 8px rgba(30,34,48,.05);
+      --code-bg:#0d1117; --code-bar:#161b22; --radius:16px;
+    }
+    [data-theme="dark"] {
+      --bg:#0a0b11; --surface:#14161f; --surface-2:#1a1d28; --text:#e7eaf3; --muted:#9aa2b6;
+      --primary:#8b7bff; --primary-2:#a595ff; --primary-soft:#211d38; --border:#252938;
+      --accent:#2dd4d4; --accent-soft:#0e2a2c;
+      --e:#4ade80; --e-bg:#0f3320; --m:#fbbf24; --m-bg:#392b07; --h:#fb7185; --h-bg:#3a1520;
+      --shadow:0 12px 34px rgba(0,0,0,.5); --shadow-sm:0 2px 10px rgba(0,0,0,.4);
+      --code-bg:#0d1117; --code-bar:#161b22;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: "Inter", system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); font-size: 15.5px; line-height: 1.65; -webkit-font-smoothing: antialiased; }
+
+    header.top {
+      position: sticky; top: 0; z-index: 20;
+      background: color-mix(in srgb, var(--surface) 82%, transparent);
+      backdrop-filter: saturate(160%) blur(14px); border-bottom: 1px solid var(--border);
+      padding: 14px 20px;
+    }
+    .top-row { max-width: 980px; margin: 0 auto; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+    .brand { font-weight: 800; font-size: 1.2rem; letter-spacing: -.01em; }
+    .brand span { color: var(--primary); }
+    .credit { font-size: .78rem; color: var(--muted); }
+    .spacer { flex: 1; }
+    .search { flex: 1 1 220px; min-width: 180px; position: relative; }
+    .search input {
+      width: 100%; padding: 10px 14px 10px 36px; border-radius: 11px; border: 1px solid var(--border);
+      background: var(--surface); color: var(--text); font-size: .9rem; outline: none; transition: border-color .15s, box-shadow .15s;
+    }
+    .search input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-soft); }
+    .search::before { content: "🔍"; position: absolute; left: 12px; top: 50%; transform: translateY(-50%); font-size: .8rem; opacity: .55; }
+    .btn {
+      padding: 9px 14px; border-radius: 10px; border: 1px solid var(--border); background: var(--surface);
+      color: var(--text); font-size: .84rem; font-weight: 600; cursor: pointer; white-space: nowrap; text-decoration: none;
+      transition: border-color .15s, color .15s, transform .15s;
+    }
+    .btn:hover { border-color: var(--primary); color: var(--primary); transform: translateY(-1px); }
+
+    .wrap { max-width: 980px; margin: 0 auto; padding: 24px 20px; }
+    .intro { color: var(--muted); font-size: .95rem; margin-bottom: 18px; line-height: 1.7; }
+    .intro strong { color: var(--text); }
+    .progress-bar-wrap { margin: 6px 0 22px; }
+    .progress-track { height: 9px; background: var(--surface-2); border-radius: 99px; overflow: hidden; }
+    .progress-fill { height: 100%; width: 0; background: linear-gradient(90deg, var(--primary), var(--accent)); transition: width .35s ease; }
+    .progress-label { font-size: .82rem; color: var(--muted); margin-top: 7px; font-weight: 500; }
+
+    /* Tree */
+    details { border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); margin-bottom: 12px; overflow: hidden; box-shadow: var(--shadow-sm); }
+    details > summary {
+      cursor: pointer; list-style: none; padding: 16px 18px; font-weight: 750; font-size: 1.08rem;
+      display: flex; align-items: center; gap: 11px; user-select: none;
+    }
+    details > summary::-webkit-details-marker { display: none; }
+    .chev { transition: transform .2s ease; color: var(--muted); font-size: .78rem; }
+    details[open] > summary .chev { transform: rotate(90deg); }
+    .topic > summary { position: relative; }
+    .topic > summary::after { content: ""; position: absolute; left: 0; top: 12px; bottom: 12px; width: 4px; border-radius: 4px; background: linear-gradient(var(--primary), var(--accent)); }
+    .topic > summary { padding-left: 22px; }
+    .count { font-size: .72rem; color: var(--muted); font-weight: 500; margin-left: auto; }
+    .study-link { margin-left: auto; font-size: .76rem; font-weight: 700; color: var(--primary); text-decoration: none; padding: 5px 13px; border: 1px solid var(--border); border-radius: 99px; transition: background .15s, border-color .15s; }
+    .study-link:hover { border-color: var(--primary); background: var(--primary-soft); }
+
+    /* nested patterns */
+    .kids { padding: 6px 14px 14px; }
+    .pat { border: 1px solid var(--border); border-radius: 12px; margin: 10px 0; background: var(--surface-2); box-shadow: none; }
+    .pat > summary { font-size: 1rem; font-weight: 650; padding: 12px 15px; }
+    .pat .kids { padding: 2px 12px 10px; }
+    .subpat { border: 1px dashed var(--border); border-radius: 10px; margin: 8px 0; background: transparent; box-shadow: none; }
+    .subpat > summary { font-size: .9rem; font-weight: 550; padding: 9px 13px; color: var(--muted); }
+
+    /* leaf problem rows */
+    .leaf { padding: 10px 12px 14px; }
+    .leaf-name { font-size: .92rem; font-weight: 650; margin: 10px 0 9px; display: flex; align-items: center; gap: 9px; }
+    .leaf-name::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--accent); }
+    .probs { display: flex; flex-wrap: wrap; gap: 9px; }
+    .prob {
+      display: inline-flex; align-items: center; gap: 9px; text-decoration: none;
+      padding: 8px 13px; border-radius: 10px; border: 1px solid var(--border);
+      background: var(--surface); font-size: .86rem; color: var(--text); transition: transform .14s ease, border-color .14s ease, box-shadow .14s ease;
+    }
+    .prob:hover { transform: translateY(-2px); border-color: var(--primary); box-shadow: var(--shadow-sm); }
+    .prob input { width: 15px; height: 15px; accent-color: var(--primary); cursor: pointer; }
+    .prob.done { opacity: .72; }
+    .prob.done .p-title { text-decoration: line-through; color: var(--muted); }
+    .tag { font-family: "JetBrains Mono", monospace; font-size: .66rem; font-weight: 700; padding: 2px 7px; border-radius: 6px; }
+    .tag.E { color: var(--e); background: var(--e-bg); }
+    .tag.M { color: var(--m); background: var(--m-bg); }
+    .tag.H { color: var(--h); background: var(--h-bg); }
+    .p-num { font-family: "JetBrains Mono", monospace; font-size: .74rem; color: var(--muted); }
+    .p-num.gfg { color: #2f8d46; font-weight: 700; }
+
+    /* hints, notes, code */
+    .hint { font-size: .9rem; color: var(--text); background: var(--accent-soft); border-radius: 10px; padding: 11px 14px; margin: 6px 0 12px; line-height: 1.6; }
+    .hint b { font-weight: 700; }
+    .note { font-size: .9rem; color: var(--muted); margin: 6px 0 10px; line-height: 1.7; }
+    .note b { color: var(--text); }
+    .note code, .inline-code { font-family: "JetBrains Mono", monospace; font-size: .82rem; background: var(--surface-2); padding: 2px 6px; border-radius: 5px; color: var(--primary); }
+    .codewrap { border: 1px solid var(--border); border-radius: 12px; overflow: hidden; margin: 8px 0 14px; box-shadow: var(--shadow-sm); }
+    .codebar { display: flex; align-items: center; gap: 7px; padding: 9px 14px; background: var(--code-bar); border-bottom: 1px solid #21262d; }
+    .codebar .dot { width: 11px; height: 11px; border-radius: 50%; }
+    .codebar .lang { margin-left: auto; font-family: "JetBrains Mono", monospace; font-size: .7rem; color: #8b949e; letter-spacing: .04em; }
+    pre.code { margin: 0; background: var(--code-bg); color: #c9d1d9; padding: 15px 17px; font-family: "JetBrains Mono", monospace; font-size: .82rem; line-height: 1.7; overflow-x: auto; white-space: pre; }
+    pre.code code { background: none !important; padding: 0; font-size: inherit; }
+
+    .hidden { display: none !important; }
+    footer { text-align: center; color: var(--muted); font-size: .82rem; padding: 32px 20px 54px; }
+    footer a { color: var(--primary); }
+    @media (max-width: 560px) { body { font-size: 15px; } }
+  </style>
+</head>
+<body>
+  <header class="top">
+    <div class="top-row">
+      <div>
+        <div class="brand">DSA <span>Patterns</span></div>
+        <div class="credit">Roadmap · curated LeetCode problems</div>
+      </div>
+      <div class="spacer"></div>
+      <div class="search"><input id="search" type="text" placeholder="Search pattern or problem…" /></div>
+      <a class="btn" href="index.html">← Mindstack</a>
+      <a class="btn" href="dsa-cheatsheet.html">📝 Cheat Sheet</a>
+      <button class="btn" id="expandAll">Expand all</button>
+      <button class="btn" id="collapseAll">Collapse all</button>
+      <button class="btn" id="themeToggle">🌙</button>
+    </div>
+  </header>
+
+  <div class="wrap">
+    <p class="intro">
+      Click a topic to expand. Each pattern lists a curated <strong>Easy</strong>, <strong>Medium</strong>, and <strong>Hard</strong>
+      problem linking directly to LeetCode. Tick a box to mark it solved — progress is saved in your browser.
+    </p>
+    <div class="progress-bar-wrap">
+      <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+      <div class="progress-label" id="progressLabel">0 / 0 solved</div>
+    </div>
+    <div id="tree"></div>
+  </div>
+
+  <footer>
+    Built for focused DSA prep · problems open on <a href="https://leetcode.com" target="_blank" rel="noopener">LeetCode</a> · <a href="index.html">Mindstack</a>
+  </footer>
+
+  <script src="dsa-data.js"></script>
+  <script>
+    /* ---------- helpers ---------- */
+    const LC = (slug) => slug.startsWith("http") ? slug : `https://leetcode.com/problems/${slug}/`;
+    const $ = (s, r = document) => r.querySelector(s);
+
+    const solved = JSON.parse(localStorage.getItem("dsa-solved") || "{}");
+    let totalProblems = 0;
+
+    function problemEl(p) {
+      // p = [num|"GFG", slug|url, title, diff]
+      const [num, slug, title, diff] = p;
+      totalProblems++;
+      const isNum = typeof num === "number";
+      const id = isNum ? ("lc" + num) : ("g:" + slug);
+      const srcLabel = isNum ? ("#" + num) : "GFG";
+      const a = document.createElement("a");
+      a.className = "prob" + (solved[id] ? " done" : "");
+      a.href = LC(slug);
+      a.target = "_blank";
+      a.rel = "noopener";
+      a.dataset.search = (num + " " + title).toLowerCase();
+      a.innerHTML =
+        `<input type="checkbox" ${solved[id] ? "checked" : ""} title="Mark solved" />` +
+        `<span class="tag ${diff}">${diff}</span>` +
+        `<span class="p-num${isNum ? "" : " gfg"}">${srcLabel}</span>` +
+        `<span class="p-title">${title}</span>`;
+      const cb = a.querySelector("input");
+      cb.addEventListener("click", (e) => {
+        e.preventDefault(); e.stopPropagation();
+        solved[id] = cb.checked;
+        localStorage.setItem("dsa-solved", JSON.stringify(solved));
+        a.classList.toggle("done", cb.checked);
+        updateProgress();
+      });
+      return a;
+    }
+
+    function hintEl(html) {
+      const el = document.createElement("div");
+      el.className = "hint";
+      el.innerHTML = "💡 " + html;
+      return el;
+    }
+
+    function leafEl(node) {
+      const wrap = document.createElement("div");
+      wrap.className = "leaf";
+      const name = document.createElement("div");
+      name.className = "leaf-name";
+      name.textContent = node.n;
+      wrap.appendChild(name);
+      if (node.h) wrap.appendChild(hintEl(node.h));
+      if (node.note) {
+        const nt = document.createElement("div");
+        nt.className = "note";
+        nt.innerHTML = node.note;
+        wrap.appendChild(nt);
+      }
+      if (node.code) {
+        const cw = document.createElement("div"); cw.className = "codewrap";
+        cw.innerHTML = '<div class="codebar"><span class="dot" style="background:#ff5f56"></span>' +
+          '<span class="dot" style="background:#ffbd2e"></span><span class="dot" style="background:#27c93f"></span>' +
+          '<span class="lang">python</span></div>';
+        const c = document.createElement("pre"); c.className = "code";
+        const code = document.createElement("code"); code.className = "language-python"; code.textContent = node.code;
+        c.appendChild(code); cw.appendChild(c); wrap.appendChild(cw);
+        if (window.hljs) { try { hljs.highlightElement(code); } catch (e) {} }
+      }
+      if (node.p) {
+        const probs = document.createElement("div");
+        probs.className = "probs";
+        node.p.forEach((p) => probs.appendChild(problemEl(p)));
+        wrap.appendChild(probs);
+      }
+      return wrap;
+    }
+
+    function nodeEl(node, level) {
+      // leaf = no children (may hold problems, notes, or code)
+      if (!node.c) return leafEl(node);
+
+      const d = document.createElement("details");
+      d.className = level === 0 ? "topic" : level === 1 ? "pat" : "subpat";
+      const s = document.createElement("summary");
+      s.innerHTML = `<span class="chev">▶</span> ${node.n}`;
+      if (level === 0) {
+        const a = document.createElement("a");
+        a.className = "study-link";
+        a.href = "study.html?topic=" + encodeURIComponent(node.n);
+        a.textContent = "📖 Study";
+        a.addEventListener("click", (e) => e.stopPropagation());
+        s.appendChild(a);
+      }
+      d.appendChild(s);
+      const kids = document.createElement("div");
+      kids.className = "kids";
+      if (node.h) kids.appendChild(hintEl(node.h));
+      node.c.forEach((child) => kids.appendChild(nodeEl(child, level + 1)));
+      d.appendChild(kids);
+      return d;
+    }
+
+    const tree = $("#tree");
+    DSA.forEach((topic) => tree.appendChild(nodeEl(topic, 0)));
+
+    /* ---------- progress ---------- */
+    function updateProgress() {
+      const done = Object.values(solved).filter(Boolean).length;
+      const pct = totalProblems ? Math.round((done / totalProblems) * 100) : 0;
+      $("#progressFill").style.width = pct + "%";
+      $("#progressLabel").textContent = `${done} / ${totalProblems} solved · ${pct}%`;
+    }
+    updateProgress();
+
+    /* ---------- expand / collapse ---------- */
+    $("#expandAll").addEventListener("click", () =>
+      document.querySelectorAll("details").forEach((d) => (d.open = true))
+    );
+    $("#collapseAll").addEventListener("click", () =>
+      document.querySelectorAll("details").forEach((d) => (d.open = false))
+    );
+
+    /* ---------- search ---------- */
+    $("#search").addEventListener("input", (e) => {
+      const q = e.target.value.trim().toLowerCase();
+      const details = document.querySelectorAll("#tree details");
+      if (!q) {
+        document.querySelectorAll(".prob").forEach((p) => p.classList.remove("hidden"));
+        details.forEach((d) => { d.classList.remove("hidden"); d.open = false; });
+        return;
+      }
+      // match problems + summary text
+      details.forEach((d) => d.classList.add("hidden"));
+      document.querySelectorAll(".prob").forEach((p) => {
+        p.classList.toggle("hidden", !p.dataset.search.includes(q));
+      });
+      // reveal branches that contain a visible problem OR whose summary matches
+      document.querySelectorAll("#tree details").forEach((d) => {
+        const sumText = d.querySelector("summary").textContent.toLowerCase();
+        const hasVisibleProb = [...d.querySelectorAll(".prob")].some((p) => !p.classList.contains("hidden"));
+        const nameMatch = sumText.includes(q);
+        if (hasVisibleProb || nameMatch) {
+          d.classList.remove("hidden"); d.open = true;
+          let par = d.parentElement.closest("details");
+          while (par) { par.classList.remove("hidden"); par.open = true; par = par.parentElement.closest("details"); }
+          if (nameMatch) d.querySelectorAll(".prob").forEach((p) => p.classList.remove("hidden"));
+        }
+      });
+    });
+
+    /* ---------- theme ---------- */
+    const toggle = $("#themeToggle"), root = document.documentElement;
+    const saved = localStorage.getItem("dsa-theme");
+    if (saved === "dark" || (!saved && matchMedia("(prefers-color-scheme: dark)").matches)) {
+      root.setAttribute("data-theme", "dark"); toggle.textContent = "☀️";
+    }
+    toggle.addEventListener("click", () => {
+      const dark = root.getAttribute("data-theme") === "dark";
+      if (dark) { root.removeAttribute("data-theme"); toggle.textContent = "🌙"; localStorage.setItem("dsa-theme", "light"); }
+      else { root.setAttribute("data-theme", "dark"); toggle.textContent = "☀️"; localStorage.setItem("dsa-theme", "dark"); }
+    });
+  </script>
+</body>
+</html>
