@@ -107,6 +107,7 @@
     .tag.H { color: var(--h); background: var(--h-bg); }
     .p-num { font-family: "JetBrains Mono", monospace; font-size: .74rem; color: var(--muted); }
     .p-num.gfg { color: #2f8d46; font-weight: 700; }
+    .p-num.am { color: #22c55e; font-weight: 700; }
 
     /* hints, notes, code */
     .hint { font-size: .9rem; color: var(--text); background: var(--accent-soft); border-radius: 10px; padding: 11px 14px; margin: 6px 0 12px; line-height: 1.6; }
@@ -170,12 +171,14 @@
     let totalProblems = 0;
 
     function problemEl(p) {
-      // p = [num|"GFG", slug|url, title, diff]
+      // p = [num|"GFG"|"AM", slug|url, title, diff]
       const [num, slug, title, diff] = p;
       totalProblems++;
       const isNum = typeof num === "number";
-      const id = isNum ? ("lc" + num) : ("g:" + slug);
-      const srcLabel = isNum ? ("#" + num) : "GFG";
+      const src = isNum ? "" : String(num).toUpperCase();
+      const id = isNum ? ("lc" + num) : (src + ":" + slug);
+      const srcLabel = isNum ? ("#" + num) : src;
+      const srcCls = src === "AM" ? " am" : src ? " gfg" : "";
       const a = document.createElement("a");
       a.className = "prob" + (solved[id] ? " done" : "");
       a.href = LC(slug);
@@ -185,7 +188,7 @@
       a.innerHTML =
         `<input type="checkbox" ${solved[id] ? "checked" : ""} title="Mark solved" />` +
         `<span class="tag ${diff}">${diff}</span>` +
-        `<span class="p-num${isNum ? "" : " gfg"}">${srcLabel}</span>` +
+        `<span class="p-num${isNum ? "" : srcCls}">${srcLabel}</span>` +
         `<span class="p-title">${title}</span>`;
       const cb = a.querySelector("input");
       cb.addEventListener("click", (e) => {

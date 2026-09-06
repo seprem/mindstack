@@ -1,6 +1,6 @@
 # Mindstack
 
-Interview prep hub: DSA notes, a one-day cheat sheet, patterns, LLD one-pagers, plus placeholders for HLD, HR, and AI.
+Interview prep hub: DSA notes, a one-day cheat sheet, patterns, LLD and HLD one-pagers, plus placeholders for HR and AI.
 
 🔗 **Live site (after GitHub Pages is on):** [https://seprem.github.io/mindstack/](https://seprem.github.io/mindstack/)
 
@@ -24,7 +24,8 @@ python3 -m http.server 8000
 | `dsa-data.js` | Shared DSA content |
 | `lld.html` | LLD notes + practice (OOP, concurrency, patterns, machine coding) |
 | `lld-data.js` | Shared LLD content |
-| `hld.html` | HLD (coming soon) |
+| `hld.html` | HLD notes + practice (scalability, DBs, cache, APIs, interview problems) |
+| `hld-data.js` | Shared HLD content |
 | `hr.html` | HR (coming soon) |
 | `ai.html` | AI (coming soon) |
 
