@@ -18,9 +18,12 @@ python3 -m http.server 8000
 | File | Purpose |
 |------|---------|
 | `index.html` | Hub — DSA / System Design / HR / AI |
-| `study.html` | DSA Notes (topic notes + practice) |
-| `dsa-cheatsheet.html` | DSA one-day sheet |
-| `dsa.html` | Pattern roadmap + LeetCode questions |
+| `dsa-notes.html` | DSA Notes (topic notes + practice) |
+| `dsa-sheet.html` | DSA one-day sheet |
+| `dsa-patterns.html` | Pattern roadmap + LeetCode questions |
+| `study.html` | Redirect → `dsa-notes.html` |
+| `dsa-cheatsheet.html` | Redirect → `dsa-sheet.html` |
+| `dsa.html` | Redirect → `dsa-patterns.html` |
 | `dsa-data.js` | Shared DSA content |
 | `lld.html` | LLD notes + practice (OOP, concurrency, patterns, machine coding) |
 | `lld-data.js` | Shared LLD content |
