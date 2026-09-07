@@ -44,7 +44,10 @@
 }
 
 *{box-sizing:border-box;margin:0;padding:0}
+/* the sticky bar is 48px on one row and about 91px once it wraps, which it
+   does below roughly 520px. An anchor has to clear whichever it is. */
 html{scroll-behavior:smooth;scroll-padding-top:70px}
+@media(max-width:519px){html{scroll-padding-top:104px}}
 body{
   background:var(--bg);
   color:var(--text);
@@ -107,14 +110,21 @@ main{flex:1;min-width:0;max-width:730px;padding:36px 0 90px}
 
 @media(max-width:900px){
   .layout{padding:0;gap:0}
+  /* translateX alone only moves the drawer: its links stay tabbable and stay
+     in the accessibility tree. visibility takes it out of both, delayed on
+     close so the slide still animates. */
   .side{
     position:fixed;top:0;left:0;bottom:0;width:255px;background:var(--bg);
     border-right:1px solid var(--rule);z-index:40;transform:translateX(-100%);
-    transition:transform .2s;max-height:none;padding:22px 20px 40px;
+    visibility:hidden;transition:transform .2s,visibility 0s .2s;
+    max-height:none;padding:22px 20px 40px;
   }
-  .side.open{transform:none}
+  .side.open{transform:none;visibility:visible;transition:transform .2s,visibility 0s}
   .menu-btn{display:inline-block}
   main{padding:26px 22px 70px}
+}
+@media(max-width:560px){
+  main{padding:22px 16px 60px}
 }
 
 /* ---------------- concept head ---------------- */
@@ -122,17 +132,23 @@ main{flex:1;min-width:0;max-width:730px;padding:36px 0 90px}
 h1.ctitle{font-size:2.3rem;font-weight:600;letter-spacing:-.028em;margin-bottom:24px}
 @media(max-width:600px){h1.ctitle{font-size:1.6rem}}
 
-/* the contents strip, plain text, no boxes */
+/* the contents strip, plain text, no boxes.
+   A wrapping flex row, not inline text. The links are emitted with no
+   whitespace between them, so as inline text the strip had no break
+   opportunity anywhere and ran off the side of every screen, at every width.
+   Flex items wrap without needing one, and the gap does the separating, so
+   no wrapped line can end on a stray dot. */
 .toc{
+  display:flex;flex-wrap:wrap;align-items:baseline;column-gap:20px;
   font-size:.82rem;color:var(--muted);line-height:2;
   padding:0 0 26px;border-bottom:1px solid var(--rule);margin-bottom:8px;
 }
 .toc a{color:var(--muted);text-decoration:none;white-space:nowrap}
 .toc a:hover{color:var(--text)}
-.toc .sep{color:var(--rule-2);margin:0 9px}
 
 /* ---------------- sections ---------------- */
 .rung{padding:34px 0;border-bottom:1px solid var(--rule);scroll-margin-top:74px}
+@media(max-width:519px){.rung{scroll-margin-top:104px}}
 .rung:last-of-type{border-bottom:0}
 .rung>h2{
   display:flex;align-items:center;gap:12px;
@@ -212,7 +228,8 @@ h1.ctitle{font-size:2.3rem;font-weight:600;letter-spacing:-.028em;margin-bottom:
   font-family:"JetBrains Mono",ui-monospace,monospace;font-size:.74rem;color:var(--accent);
   margin-left:auto;white-space:nowrap;
 }
-@media(max-width:600px){.vcost{margin-left:0}}
+/* some of these run to 60 characters, which no phone can hold on one line */
+@media(max-width:600px){.vcost{margin-left:0;white-space:normal}}
 .vbody{font-size:1.02rem;line-height:1.7;color:var(--text-2)}
 .vwhen,.vwatch{margin-top:7px;font-size:.95rem;color:var(--muted)}
 .vwhen i,.vwatch i{
@@ -240,6 +257,10 @@ h1.ctitle{font-size:2.3rem;font-weight:600;letter-spacing:-.028em;margin-bottom:
   font-size:.78rem;font-weight:600;text-transform:uppercase;letter-spacing:.1em;
   color:var(--muted);margin:34px 0 12px;
 }
+/* a table refuses to shrink below its min-content width, so an unbreakable
+   API name in one cell would widen the whole page. Give it its own scroll
+   box, and let the cells break so it almost never has to use one. */
+.tblwrap{overflow-x:auto;max-width:100%}
 table.costs{width:100%;border-collapse:collapse;font-size:.9rem;line-height:1.55}
 .costs th{
   text-align:left;padding:0 14px 8px 0;font-size:.68rem;text-transform:uppercase;
@@ -251,9 +272,23 @@ table.costs{width:100%;border-collapse:collapse;font-size:.9rem;line-height:1.55
 .costs td:last-child{padding-right:0}
 .costs code{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:.82em;color:var(--accent);white-space:nowrap}
 .costs .why{color:var(--muted)}
+/* break-word, not anywhere: anywhere also drops the cell's min-content width
+   to one character, which lets the auto table algorithm squeeze a column
+   until the HEADER breaks in half. break-word splits a word only when it
+   genuinely cannot fit a line, and .tblwrap catches whatever is left. */
 @media(max-width:640px){
   .costs td:first-child{white-space:normal}
-  .costs code{white-space:normal}
+  .costs code{white-space:normal;overflow-wrap:break-word}
+}
+
+/* Inline code chips are kept whole on purpose, so a snippet does not read as
+   two chips. Below this width a long one cannot fit on any line, and holding
+   it whole pushes the entire page sideways: let it break at its spaces, and
+   mid-token only if it has none. */
+@media(max-width:640px){
+  .body code,code.inl,.variant code,.traps code,.vizcap code,.entry .one code{
+    white-space:normal;overflow-wrap:break-word;
+  }
 }
 
 .traps{list-style:none;margin:0;padding:0;max-width:66ch}
@@ -320,7 +355,10 @@ pre.code code{background:none!important;padding:0;font-size:inherit;color:inheri
 .viz{border:1px solid var(--rule);border-radius:4px;overflow:hidden;background:var(--bg)}
 .vizwrap+.vizwrap{margin-top:22px}
 .vizstage{padding:20px 16px;display:block;width:100%;overflow-x:auto}
-.vizstage svg{width:100%;height:auto;display:block;max-height:330px;min-width:280px}
+/* --vw is set per drawing by svgWrap in viz.js: shrink to the stage, but not
+   past the point where the labels stop being readable. Past that the stage
+   scrolls, which is what its overflow-x is for. */
+.vizstage svg{width:100%;height:auto;display:block;max-height:330px;min-width:var(--vw,280px)}
 .vizcap{
   padding:14px 18px;border-top:1px solid var(--rule);background:var(--bg-soft);
   font-family:"Source Serif 4","Iowan Old Style",Georgia,serif;
@@ -336,6 +374,13 @@ pre.code code{background:none!important;padding:0;font-size:inherit;color:inheri
 .vizbar button:hover{color:var(--text)}
 .vizbar input[type=range]{flex:1;min-width:80px;accent-color:var(--accent);height:2px}
 .vizbar .step{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:.72rem;color:var(--faint);min-width:40px;text-align:right}
+/* .viz clips its overflow, so at 320px the step counter was simply cut off.
+   Buy the 15px back from the gaps rather than from the controls. */
+@media(max-width:560px){
+  .vizbar{gap:10px;padding:10px 13px}
+  .vizbar input[type=range]{min-width:48px}
+  .vizstage{padding:20px 12px}
+}
 
 /* svg classes, driven by the theme tokens */
 .v-box{fill:var(--bg-soft);stroke:var(--rule-2);stroke-width:1.25}
@@ -379,6 +424,10 @@ pre.code::-webkit-scrollbar-thumb:hover{background:#55565c}
 .pager a span{display:block;font-size:.72rem;color:var(--faint);text-transform:uppercase;letter-spacing:.09em;margin-bottom:4px}
 .pager a:hover{color:var(--accent)}
 .pager a.next{text-align:right}
+@media(max-width:560px){
+  .pager{flex-direction:column;gap:18px}
+  .pager a.next{text-align:left}
+}
 
 /* ---------------- revision page ---------------- */
 .reading{max-width:760px;margin:0 auto;padding:44px 22px 90px}

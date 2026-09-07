@@ -18,8 +18,15 @@ const VIZ = {};
 
 /* ============================ renderers ============================ */
 
+/* --vw carries a legibility floor to the stylesheet, which uses it as the
+   SVG's min-width. A drawing scales with its box, so a 15-cell diagram in a
+   300px phone renders its 14px labels at about 5px. 0.72 of natural width
+   puts them at 10px, the smallest that is still readable; below that the
+   stage scrolls sideways instead of shrinking further. Small drawings still
+   fit a phone outright, so only the wide ones ever scroll. */
 const svgWrap = (w, h, inner) =>
-  `<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="xMidYMid meet" role="img">${inner}</svg>`;
+  `<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="xMidYMid meet" role="img" ` +
+  `style="--vw:${Math.min(Math.round(w * 0.72), 620)}px">${inner}</svg>`;
 
 const esc = s => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 

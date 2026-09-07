@@ -100,8 +100,18 @@
       const v = current[s.k];
       return v && (!Array.isArray(v) || v.length);
     });
+    // no separator elements between the links. As inline text with no
+    // whitespace anywhere, the strip had no break opportunity and ran off the
+    // side of the page; .toc is a wrapping flex row and its gap separates them
     main.appendChild(el("nav", "toc", present.map(s =>
-      `<a href="#${s.id}">${esc(s.t)}</a>`).join('<span class="sep">·</span>')));
+      `<a href="#${s.id}">${esc(s.t)}</a>`).join("")));
+
+    // tables can be wider than a phone; give each one its own scroll box
+    const table = (parent, html) => {
+      const wrap = el("div", "tblwrap");
+      wrap.appendChild(el("table", "costs", html));
+      parent.appendChild(wrap);
+    };
 
     function section(s, build) {
       const sec = el("section", "rung");
@@ -149,21 +159,21 @@
       if (s.k === "hing") return section(s, b => { b.appendChild(el("div", "hing", v)); });
 
       if (s.k === "costs") return section(s, b => {
-        b.appendChild(el("table", "costs",
+        table(b,
           `<thead><tr><th>Operation</th><th>Cost</th><th>Why</th></tr></thead><tbody>` +
           v.map(([op, cost, why]) => `<tr><td>${op}</td><td><code>${esc(cost)}</code></td><td class="why">${why}</td></tr>`).join("") +
-          `</tbody></table>`));
+          `</tbody>`);
         if (current.traps && current.traps.length) {
           b.appendChild(el("div", "tbl-title", "⚠️ Traps"));
           b.appendChild(el("ul", "traps", current.traps.map(t => `<li>${t}</li>`).join("")));
         }
         if (current.impl && current.impl.length) {
           b.appendChild(el("div", "tbl-title", "In your language"));
-          b.appendChild(el("table", "costs",
+          table(b,
             `<thead><tr><th>Language</th><th>What it is called</th><th>What to watch for</th></tr></thead><tbody>` +
             current.impl.map(([l, api, note]) =>
               `<tr><td>${esc(l)}</td><td><code>${esc(api)}</code></td><td class="why">${esc(note)}</td></tr>`).join("") +
-            `</tbody></table>`));
+            `</tbody>`);
         }
       });
 
