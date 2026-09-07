@@ -1212,3 +1212,136 @@ Object.assign(VIZ, {
 ]},
 
 });
+
+/* ==================================================================== */
+/* Four concepts added later: the keep-or-restart decision, the LCA
+   bubble-up, the two structures an LRU cache is made of, and why KMP
+   never re-reads a character.                                          */
+/* ==================================================================== */
+Object.assign(VIZ, {
+
+/* ---- Kadane: the whole algorithm is one comparison ---- */
+"kadane": { kind: "cells", arr: ["-2", "3", "-1", "4", "-3", "2"], frames: [
+  { on: [], out: "find the contiguous block with the largest sum",
+    cap: "Contiguous, so you cannot cherry-pick. There are <b>n(n+1)/2</b> blocks and re-adding each one is O(n<sup>3</sup>). Carrying a running sum gets that to O(n<sup>2</sup>), which is still a nested loop." },
+  { band: [1, 3], out: "the answer is 3 + (-1) + 4 = 6",
+    cap: "Notice the answer <b>contains a negative number</b>. So 'skip the negatives' is not the rule, and neither is 'take the positives'. Something has to decide when a negative is worth carrying." },
+  { hot: [0], ptr: { i: 0 }, out: "best block ENDING at index 0 = -2",
+    cap: "Change the question. Instead of the best block anywhere, ask for the best block that <b>ends exactly here</b>. There is only one of those per index, so there are only n answers to find." },
+  { hot: [1], dim: [0], ptr: { i: 1 }, out: "carry: -2 + 3 = 1   ·   start fresh: 3   ->  RESTART",
+    cap: "At each index there are exactly <b>two</b> candidates: extend the block that ended one step back, or begin a new block here. Nothing else can end at this index. Here the carried total drags 3 down, so drop it." },
+  { band: [1, 2], ptr: { i: 2 }, out: "carry: 3 + (-1) = 2   ·   start fresh: -1   ->  EXTEND",
+    cap: "Now the negative is worth carrying, because 3 more than pays for it. This is the comparison the whole algorithm is: <b>keep the past only while it is still an asset</b>." },
+  { band: [1, 3], ptr: { i: 3 }, out: "carry: 2 + 4 = 6   ·   start fresh: 4   ->  EXTEND   ·   best = 6",
+    cap: "6 is the best block ending at index 3, and also the best seen so far. Keep two numbers apart: the running block, and the best any block has ever reached." },
+  { band: [1, 3], dim: [5], hot: [4], ptr: { i: 4 }, out: "carry: 6 + (-3) = 3   ->  EXTEND, but best stays 6",
+    cap: "Still worth extending, and still not a record. Forgetting to keep <code>best</code> separate is the single most common way to get this wrong: you return the running total and it has already decayed." },
+  { on: [0, 1, 2, 3, 4, 5], out: "one pass, two variables: O(n) time, O(1) space",
+    cap: "Every index answers its own question in O(1) from the previous one, so the whole array is <b>one pass</b>. It is dynamic programming with the table thrown away, because each cell only ever reads the one before it." },
+]},
+
+/* ---- LCA: one post-order pass, and what each subtree reports back ---- */
+"lca": {
+  kind: "tree", w: 600, h: 336,
+  nodes: {
+    r: { x: 300, y: 44,  t: "3" },
+    a: { x: 180, y: 120, t: "5" },
+    b: { x: 430, y: 120, t: "1" },
+    c: { x: 110, y: 196, t: "6" },
+    d: { x: 255, y: 196, t: "2" },
+    e: { x: 370, y: 196, t: "0" },
+    f: { x: 490, y: 196, t: "8" },
+    g: { x: 205, y: 272, t: "7" },
+    h: { x: 300, y: 272, t: "4" },
+  },
+  edges: [["r","a"],["r","b"],["a","c"],["a","d"],["b","e"],["b","f"],["d","g"],["d","h"]],
+  frames: [
+    { on: ["c", "h"], dim: ["r", "b", "e", "f", "g"], out: "LCA(6, 4) = the LOWEST node with both of them below it",
+      cap: "Every node above the answer also has both targets below it, so 'an ancestor of both' is not enough. The word doing the work is <b>lowest</b>: the last node where the two paths are still the same path." },
+    { on: ["r", "a", "c", "d", "h"], edge: [["r","a"],["a","c"],["a","d"],["d","h"]], dim: ["b", "e", "f", "g"],
+      out: "root to 6 is [3, 5, 6] · root to 4 is [3, 5, 2, 4]",
+      cap: "The obvious method: record both root-to-target paths, walk them side by side, and the <b>last node they agree on</b> is the answer. Correct, and it costs O(n) extra space plus two full searches." },
+    { on: ["c", "h"], t: { g: "nil", e: "nil", f: "nil" }, dim: ["r", "a", "b", "d", "e", "f", "g"],
+      out: "ask every node one question: did you find either target below you?",
+      cap: "Now do it in one pass. Recurse to the bottom first, and have each node <b>report upward</b>. A node that is a target reports itself. A node that found nothing reports nothing." },
+    { on: ["c", "h", "d"], t: { g: "nil", e: "nil", f: "nil", d: "4" }, dim: ["r", "b", "e", "f", "g"],
+      out: "node 2 heard from ONE side only, so it forwards 4 unchanged",
+      cap: "Node 2 got 4 from the right and nothing from the left. One report means the other target is somewhere else entirely, so 2 is not the answer. It <b>passes the one report up</b> and stays out of the way." },
+    { on: ["a"], t: { g: "nil", e: "nil", f: "nil", d: "4", a: "5 LCA", b: "nil" }, dim: ["r", "b", "e", "f", "g"],
+      out: "node 5 heard from BOTH sides. That is the answer, and there is only one such node.",
+      cap: "Two non-empty reports means the targets are in different subtrees of this node, so the paths split <b>here</b> and nowhere lower. Report yourself upward instead of either child." },
+    { on: ["a", "r"], t: { g: "nil", e: "nil", f: "nil", d: "4", a: "5 LCA", b: "nil", r: "5" }, dim: ["b", "e", "f", "g"],
+      out: "everything above just forwards the single non-empty report",
+      cap: "The root hears 5 from the left and nothing from the right, so by the same rule it forwards 5. <b>The answer floats to the top on its own</b>, which is why the whole thing is one post-order function with no extra storage." },
+    { on: ["a", "d", "h"], edge: [["a","d"],["d","h"]], t: { a: "5 LCA" }, dim: ["r", "b", "c", "e", "f", "g"],
+      out: "LCA(5, 4): the recursion stops AT 5, and that is correct",
+      cap: "The case people try to special-case. When one target is an ancestor of the other, the walk hits 5, returns it immediately, and never looks below. <b>A node is its own ancestor</b>, so no extra branch is needed. Adding one usually breaks it." },
+    { on: ["r", "a", "b"], dim: ["c", "d", "e", "f", "g", "h"],
+      out: "O(n) per query, O(1) space. For many queries: O(n log n) build, O(log n) each.",
+      cap: "One query is a single traversal. Thousands of queries on the same tree are not: then you precompute, for every node, its ancestor 1, 2, 4, 8 steps up, and each query becomes a handful of jumps. That table is <b>binary lifting</b>." },
+  ]
+},
+
+/* ---- LRU: two structures, each covering the other's blind spot ---- */
+"lru": {
+  kind: "tree", w: 620, h: 300, arrows: true,
+  nodes: {
+    m1: { x: 90,  y: 62,  t: "key A", w: 76 },
+    m2: { x: 240, y: 62,  t: "key B", w: 76 },
+    m3: { x: 390, y: 62,  t: "key C", w: 76 },
+    m4: { x: 540, y: 62,  t: "key D", w: 76, hidden: true },
+    n1: { x: 90,  y: 200, t: "A:1", w: 76 },
+    n2: { x: 240, y: 200, t: "B:2", w: 76 },
+    n3: { x: 390, y: 200, t: "C:3", w: 76 },
+    n4: { x: 540, y: 200, t: "D:4", w: 76, hidden: true },
+  },
+  edges: [["m1","n1"],["m2","n2"],["m3","n3"],["n1","n2"],["n2","n3"]],
+  frames: [
+    { on: ["m1", "m2", "m3"], dim: ["n1", "n2", "n3"], edges: [],
+      out: "a hash map: O(1) get, and no idea which entry is oldest",
+      cap: "Start with what a cache obviously needs. A map answers <b>get</b> in O(1) and that is the easy half. When it fills up it cannot tell you what to throw away, because a hash map has no order at all." },
+    { on: ["n1", "n2", "n3"], dim: ["m1", "m2", "m3"], edges: [["n1","n2"],["n2","n3"]],
+      out: "a list in recency order: head = just used, tail = evict this one",
+      cap: "So add the missing half. Keep the same entries in a list ordered by <b>when they were last touched</b>. Now eviction is free: it is whatever sits at the tail. But finding a key in a list is O(n), which undoes the map." },
+    { on: ["m2", "n2"], edge: [["m2","n2"]], dim: ["m1", "m3", "n1", "n3"],
+      out: "get(B): the map stores the NODE, not the value",
+      cap: "The join that makes both halves work: the map's value is a <b>pointer to the list node</b>. One lookup and you are standing on the node itself, with no walking. Store the plain value instead and you are back to an O(n) search." },
+    { on: ["n2", "n1", "n3"], dim: ["m1", "m2", "m3"],
+      edges: [["m1","n1"],["m2","n2"],["m3","n3"],["n2","n1"],["n1","n3"]],
+      out: "unlink B, relink it at the head: 4 pointer writes, O(1)",
+      cap: "To unlink a node you must reach the one <b>before</b> it, and in a singly linked list that means walking from the head. This single requirement is the entire reason the list is <b>doubly</b> linked. Nothing moved in memory; only links changed." },
+    { show: ["m4", "n4"], dim: ["m3", "n3"],
+      edges: [["m1","n1"],["m2","n2"],["m4","n4"],["n4","n2"],["n2","n1"]],
+      out: "put(D) while full: C was the tail, so C is evicted",
+      cap: "Insert at the head, then drop the tail. The half people forget: the evicted node must be deleted from <b>both</b> structures. Leave the key in the map and it points at a node no longer in the list, and get returns a value the cache no longer holds." },
+    { show: ["m4", "n4"], on: ["m1", "m2", "m4", "n1", "n2", "n4"], dim: ["m3", "n3"],
+      edges: [["m1","n1"],["m2","n2"],["m4","n4"],["n4","n2"],["n2","n1"]],
+      out: "get and put are both O(1), worst case, not amortised",
+      cap: "Nothing here is searched, sorted or scanned. That is the pattern worth taking away: when one structure is fast at exactly what another is slow at, <b>hold the same objects in both</b> and keep the two in step on every write." },
+  ]
+},
+
+/* ---- KMP: the text pointer never goes backwards ---- */
+"kmp": { kind: "cells", arr: ["a", "b", "a", "b", "a", "b", "c", "a"], frames: [
+  { on: [], out: "text n = 8 · pattern = a b a b c",
+    cap: "Line the pattern up at index 0, compare left to right, and on any mismatch slide one place right and start over. That is the naive scan, and it is <b>O(n·m)</b>." },
+  { band: [0, 3], bad: [4], out: "matched a b a b, then text 'a' vs pattern 'c'",
+    cap: "Four characters matched, the fifth did not. The naive rule now throws away everything it just learned and restarts one place to the right." },
+  { band: [1, 5], dim: [0], out: "naive: restart at index 1 and re-read a b a b",
+    cap: "Look at what that costs. <b>The text pointer moved backwards</b>, and characters 1 to 3 get read a second time. On a text like aaaa...aab, every position pays for the whole pattern again." },
+  { arr: ["a", "b", "a", "b", "c"], on: [0, 1], hot: [2, 3], out: "the matched part was a b a b",
+    cap: "But the four characters that matched are not a mystery: they are the pattern's own first four. And <b>a b a b</b> begins and ends with the same <b>a b</b>. That overlap is knowledge the naive scan is throwing away." },
+  { arr: ["0", "0", "1", "2", "0"], on: [0, 1, 2, 3, 4], out: "lps[i] = longest proper prefix of pattern[0..i] that is also a suffix",
+    cap: "Precompute that overlap once, for every prefix of the <b>pattern only</b>, never the text. lps[3] = 2 says: after matching 4 characters, 2 of them are still usable. Building this table is the pattern matched against itself, <b>O(m)</b>." },
+  { arr: ["a", "b", "a", "b", "a", "b", "c", "a"], band: [2, 5], dim: [0, 1], hot: [2, 3],
+    out: "shift by 4 - lps[3] = 2, and a b is already known to match",
+    cap: "So slide the pattern by <b>matched minus lps</b>, not by one. The two characters now under the pattern's start were already checked, so comparing resumes at pattern index 2 and text index 4." },
+  { arr: ["a", "b", "a", "b", "a", "b", "c", "a"], band: [2, 6], hot: [6], dim: [0, 1, 7],
+    out: "text index 4, 5, 6 all match: found at index 2",
+    cap: "The text index went 4, 5, 6. It <b>never went back to 1</b>. Only the pattern index jumped, and it only ever jumps backwards, which is why the fallback loop cannot cost more than the forward progress already paid for." },
+  { arr: ["a", "b", "a", "b", "a", "b", "c", "a"], on: [0, 1, 2, 3, 4, 5, 6, 7],
+    out: "O(n + m) time, O(m) space, and n was read once",
+    cap: "Each text character is looked at a constant number of times, so the scan is <b>O(n)</b> after an <b>O(m)</b> table. Rabin-Karp reaches the same bound differently, by comparing rolling hashes and verifying only on a hit." },
+]},
+
+});

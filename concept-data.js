@@ -30,7 +30,7 @@ const CONCEPTS = [
   id: "big-o",
   n: "Big-O, how to judge an algorithm",
   group: "Fundamentals",
-  one: "Big-O is the <b>shape of the growth curve</b>, not the speed. It answers one question: if the input gets 10× bigger. What happens to the work?",
+  one: "Big-O is the <b>shape of the growth curve</b>, not the speed. It answers one question: if the input gets 10× bigger, what happens to the work?",
 
   plain: `<p>Two programs solve the same problem. One takes 5 seconds on your laptop, the other 8 seconds. Which is better? <b>You cannot tell yet.</b> Ask instead: what happens when the input goes from 1,000 items to 1,000,000?</p>
 <p>The 5-second one might become 5 hours. The 8-second one might become 9 seconds. Big-O measures <b>that</b>, how the work grows with the input, and deliberately throws away everything else: the constant factors, the language, the CPU, the coffee break.</p>
@@ -718,7 +718,7 @@ C[n][r] <- C[n-1][r-1] + C[n-1][r]`,
 def is_prime(n):                      # O(sqrt n)
     if n < 2: return False
     i = 2
-    while i * i <= n:                 # isqrt is exact, sqrt returns a float
+    while i * i <= n:                 # i*i beats sqrt(n): no float, no rounding
         if n % i == 0: return False
         i += 1
     return True
@@ -1619,7 +1619,7 @@ function rotate90(g) {
     { n: "KMP", cost: "O(n + m) \u00b7 O(m) space",
       idea: "Precompute, for every prefix of the pattern, the longest proper prefix that is also a suffix. On a mismatch that table says how far you may jump without missing a match, so the haystack pointer never moves backwards.",
       when: "Guaranteed linear substring search, and any problem about the periodicity of a string.",
-      watch: "The prefix table is the whole difficulty and is easy to be off by one in. Test it against the pattern <code>aabaaab</code> before trusting it." },
+      watch: "The prefix table is the whole difficulty and is easy to be off by one in. Test it against the pattern <code>aabaaab</code> before trusting it. It is derived, drawn and written out on the string search page." },
 
     { n: "Rabin-Karp", cost: "O(n + m) average \u00b7 O(n \u00b7 m) worst",
       idea: "Hash the pattern, then roll a hash along the text so each window costs O(1) to update. Compare hashes, and only compare characters when they collide.",
@@ -1876,7 +1876,7 @@ function isPal(s) {
     { n: "LRU cache, hash map plus doubly linked list", cost: "O(1) get and put",
       idea: "The map finds a node instantly; the list keeps usage order so the least recent is always at the tail. Every access unlinks its node and relinks it at the head.",
       when: "The classic design question, and the actual structure behind most caches.",
-      watch: "A singly linked list will not do, because unlinking a node in O(1) needs its predecessor. That requirement is the entire reason the list is doubly linked, and it is what the question is really testing." },
+      watch: "A singly linked list will not do, because unlinking a node in O(1) needs its predecessor. That requirement is the entire reason the list is doubly linked, and it is what the question is really testing. See the LRU cache page for the whole structure." },
   ],
 
   hing: `<p><b>Hash map ka core idea ek line mein:</b> key ko <b>dhoondte nahi</b>, key se address <b>nikaalte</b> hain.</p>
@@ -2022,7 +2022,7 @@ groups.get(key).push(w);
   codecap: "seen / freq / graph / index, nearly every hash-map solution is one of these four shapes.",
 
   q: [
-    ["In one sentence. Why is a hash map O(1)?", "It computes the slot from the key instead of searching for it, one hash plus a modulo lands directly on the address."],
+    ["In one sentence, why is a hash map O(1)?", "It computes the slot from the key instead of searching for it, one hash plus a modulo lands directly on the address."],
     ["Why are collisions unavoidable?", "Keys are unbounded, slots are finite, so by the pigeonhole principle two keys must eventually share a slot. A hash table must therefore include a collision strategy."],
     ["What is the load factor and why does it matter?", "items ÷ slots. Kept under ~2/3 so buckets stay about one item long. Exceeding it triggers an O(n) resize and rehash, amortised to O(1) per insert."],
     ["What is the true worst case, and what causes it?", "O(n) per operation, when all keys land in one bucket. Runtimes defend against it, Python randomises string hashing per process, Java turns a long bucket into a balanced tree."],
@@ -2701,7 +2701,7 @@ class MinHeap {
     ["What does a heap guarantee, and what does it not?", "It guarantees each parent ≤ its children, so the root is the global minimum. It does NOT order siblings or keep the array sorted."],
     ["Why are push and pop O(log n)?", "The heap is a complete binary tree of height ⌊log₂n⌋, and both operations repair the invariant along a single root-to-leaf path."],
     ["Why can a heap live in a plain array?", "It is always complete, so positions are computable: children of i are 2i+1 and 2i+2, parent is (i-1)//2. No pointers required."],
-    ["Top-k largest: which heap. What size, what cost?", "A MIN-heap of size k, push each element, pop when size > k so the smallest of the current best k is discarded. O(n log k) time, O(k) space."],
+    ["Top-k largest: which heap, what size, what cost?", "A MIN-heap of size k, push each element, pop when size > k so the smallest of the current best k is discarded. O(n log k) time, O(k) space."],
     ["Why is heapify O(n) rather than O(n log n)?", "It runs bottom-up and most nodes are near the leaves with a very short sift-down; the sum over all levels converges to O(n)."],
     ["How do you flip a min-heap into a max-heap?", "Negate the values (or the priority in a tuple) on the way in and out, or supply a reversed comparator where the language allows one. Java's PriorityQueue takes Comparator.reverseOrder(); C++ is already a max-heap and needs greater<> for a min-heap."],
   ],
@@ -2931,7 +2931,7 @@ function subsets(nums) {
     ["Why should you not trace a recursion in your head?", "Correctness comes from induction, not simulation: prove the base case and the single step and every deeper level follows automatically."],
     ["Naive fib is O(2ⁿ) time. What is its space, and why?", "O(n). Time counts nodes in the call tree, but space counts only the frames alive at once, which is the depth."],
     ["Why does memoising turn O(2ⁿ) into O(n)?", "The subproblems overlap; caching by argument makes each distinct subproblem run once, so cost becomes the number of distinct states. That is exactly top-down DP."],
-    ["In backtracking. Why must you un-choose?", "The path is shared mutable state, without popping, the sibling branch inherits choices from the branch you just finished."],
+    ["In backtracking, why must you un-choose?", "The path is shared mutable state, without popping, the sibling branch inherits choices from the branch you just finished."],
     ["Why does res.append(path) give wrong answers?", "It stores a reference to a list that keeps mutating, so all stored results change together. Append a copy: path[:]."],
   ],
 
@@ -3129,7 +3129,7 @@ const levelSize = q.length - head;`,
     ["Why do array indices start at 0?", "So that an index is an offset from the start, which makes half-open ranges work out: [0, n) covers exactly n elements and the size is n − 0."],
     ["What is a loop invariant?", "A single statement that is true before the loop and still true after every iteration. Each branch's job is to preserve it, which makes correctness checkable locally instead of by simulation."],
     ["An invariant is not enough on its own. What else must you show?", "Termination. Something must strictly decrease each pass. Every infinite loop is a branch that failed to shrink anything."],
-    ["In a half-open range. What is the last valid index?", "hi − 1. Reading a[hi] is out of bounds, hi is one past the end, which is why C++ end() must never be dereferenced."],
+    ["In a half-open range, what is the last valid index?", "hi − 1. Reading a[hi] is out of bounds, hi is one past the end, which is why C++ end() must never be dereferenced."],
     ["Where should your edge-case tests come from?", "The invariant: check whether it still holds for an empty range, for a single element, and when the answer sits at the first or last position."],
   ],
 
@@ -3586,10 +3586,10 @@ function middle(head) {
   q: [
     ["What is the trade a linked list makes, in one sentence?", "It gives up contiguous memory, losing O(1) indexing and binary search, to gain O(1) insert and delete at a node you are already holding, with no shifting or reallocation."],
     ["Why does reversal need three pointers?", "Flipping curr.next overwrites the only reference to the rest of the list, so next must be saved before the flip. The loop is save, flip, advance."],
-    ["After the reversal loop. Why return prev and not curr?", "The loop exits when curr becomes null, having walked off the end. prev is left pointing at the last node visited, which is the new head."],
+    ["After the reversal loop, why return prev and not curr?", "The loop exits when curr becomes null, having walked off the end. prev is left pointing at the last node visited, which is the new head."],
     ["What does a dummy head node buy you?", "Every real node gains a previous node, so deleting or inserting at the head stops being a special case. You return dummy.next at the end."],
     ["Insert is O(1), so why is 'insert at index i' O(n)?", "The O(1) is only the rewiring. Getting to index i still means following i pointers, because position cannot be computed."],
-    ["An array and a linked list both scan in O(n). Why is the array much faster in practice?", "Array elements are adjacent, so one cache line fetch delivers several of them. Linked-list nodes are scattered, so each hop can cost a separate memory fetch."],
+    ["Insert at a node is O(1). Why is that claim only half true?", "The rewiring is two writes, so it really is O(1), but only once you are already holding the node. Insert at index i costs O(n) to walk there first. Interview problems are shaped so you arrive at the node by other means: a fast pointer, a previous pointer, a hash map."],
   ],
 
   p: [
@@ -3822,7 +3822,7 @@ function levelOrder(root) {
     ["What changes if you swap the stack for a queue?", "DFS becomes BFS. The walk visits level by level instead of path by path, which is what questions about depth, distance, or per-level results need."],
     ["Tree operations are O(log n). What is wrong with that claim?", "They are O(h). h is log n only if the tree is balanced; a tree built from sorted data degenerates into a line, giving h = n and O(n) operations."],
     ["What is the space cost of a recursive traversal, and when does it bite?", "O(h) stack frames. On a balanced tree that is O(log n), but on a skewed tree with 10⁵ nodes it is 10⁵ frames and will overflow the stack."],
-    ["In level-order BFS. Why capture the queue size before the inner loop?", "Because the loop pushes the next level onto the same queue. Freezing the size marks where the current level ends."],
+    ["In level-order BFS, why capture the queue size before the inner loop?", "Because the loop pushes the next level onto the same queue. Freezing the size marks where the current level ends."],
   ],
 
   p: [
@@ -3831,7 +3831,7 @@ function levelOrder(root) {
     [226, "invert-binary-tree", "Invert Binary Tree", "E"],
     [102, "binary-tree-level-order-traversal", "Level Order Traversal, BFS by level", "M"],
     [543, "diameter-of-binary-tree", "Diameter, return one thing, track another", "E"],
-    [236, "lowest-common-ancestor-of-a-binary-tree", "Lowest Common Ancestor", "M"],
+    [236, "lowest-common-ancestor-of-a-binary-tree", "Lowest Common Ancestor, and it has its own page", "M"],
     [124, "binary-tree-maximum-path-sum", "Maximum Path Sum", "H"],
   ],
 },
@@ -4106,10 +4106,275 @@ function kthSmallest(root, k) {
     [700, "search-in-a-binary-search-tree", "Search in a BST, the walk itself", "E"],
     [98, "validate-binary-search-tree", "Validate BST, the range trick", "M"],
     [230, "kth-smallest-element-in-a-bst", "Kth Smallest, in-order with a counter", "M"],
-    [235, "lowest-common-ancestor-of-a-binary-search-tree", "LCA in a BST, easier than in a plain tree", "M"],
+    [235, "lowest-common-ancestor-of-a-binary-search-tree", "LCA in a BST, easier than in a plain tree, and it has its own page", "M"],
     [701, "insert-into-a-binary-search-tree", "Insert into a BST", "M"],
     [450, "delete-node-in-a-bst", "Delete Node, including the awkward case", "M"],
     [108, "convert-sorted-array-to-binary-search-tree", "Sorted Array to BST, balance on purpose", "E"],
+  ],
+},
+
+/* ==================================================================== */
+{
+  id: "lca",
+  n: "Lowest common ancestor",
+  group: "Data structures",
+  one: "Recurse to the bottom and let every node report what it found. The one node that hears back from <b>both</b> sides is the answer, and there is exactly one.",
+
+  plain: `<p>Two nodes sit somewhere in a tree. Walk down from the root towards each of them and, for a while, you take the same turns. At some node the two routes disagree for the first time, one goes left and the other goes right. That node is the lowest common ancestor: the last place they were still together.</p>
+<p>Every node above it is also an ancestor of both, so "an ancestor of both" is not a strong enough description. The word carrying the meaning is <b>lowest</b>. And notice that if one of the two nodes sits directly above the other, the answer is that node itself, because a node counts as its own ancestor. That sounds like a technicality and it is the single most useful fact on this page.</p>
+<p>You could find it by writing down both root-to-node paths and comparing them. That works and costs a second array. The better method never builds a path at all: it walks to the bottom first and lets the answer come back up.</p>
+<p><b>Analogy.</b> Two people trace their family tree back through their parents. The first shared name is the answer, and you find it not by reading the tree from the top but by both of you walking upward until you collide.</p>`,
+
+  why: [
+    { t: "Say precisely what is being asked", d: "From the root there is exactly one path to each node. The two paths start identically and separate at most once, because a tree has no second route anywhere. So the question is not really about ancestry, it is: <b>where do the two paths stop agreeing?</b>" },
+    { t: "The direct method works and costs memory", d: "Record both root-to-node paths, then walk them in step and keep the last node they share. That is correct and it is what most people write first. It costs O(n) time to find each node and O(h) space to hold each path, and it needs two full searches before any comparison can start." },
+    { t: "Turn the recursion around", d: "Instead of asking a node what is above it, ask what is <b>below</b> it. Recurse into both children first and let each one report back a single thing: a target it found down there, or nothing at all. This is a post-order traversal, the same shape as computing a height." },
+    { t: "Three cases, and only one of them is interesting", d: "A node looks at its two reports. <b>Both non-empty</b>: the targets are in different subtrees, so the paths split right here, and this node is the answer. <b>Exactly one</b>: both targets, or the only one found so far, are on that side, so pass the report up unchanged. <b>Neither</b>: report nothing." },
+    { t: "Being your own ancestor removes the hard case", d: "What if one target sits above the other? Define the base case as \"if this node is either target, return it immediately and do not look below\". The recursion then stops at the upper one and returns it, which is the correct answer. People who add a branch for this case usually break the ordinary case doing it." },
+    { t: "Only one node can ever see both", d: "Once a node reports itself, every node above it sees exactly one non-empty report and just forwards it. So the answer floats to the root untouched, and no node above can mistake itself for the split point. That is why no extra bookkeeping is needed and the whole thing is six lines." },
+    { t: "What one pass cannot do", d: "It assumes both nodes are actually in the tree. If only one is present you get that one back, silently, and the caller believes it. It is also <b>O(n) per query</b>, which is fine once and hopeless for a hundred thousand queries on a fixed tree. That is the case preprocessing exists for." },
+  ],
+
+  variants: [
+    { n: "Recursive post-order", cost: "O(n) time, O(h) space",
+      idea: "The six-line function above. Recurse both ways, return this node if both sides reported, otherwise forward the single report.",
+      when: "A general binary tree and one or a few queries. This is the interview answer.",
+      watch: "O(h) space is the call stack, and h is n on a skewed tree. It also cannot tell you that a node was absent." },
+
+    { n: "BST walk", cost: "O(h) time, O(1) space",
+      idea: "In a search tree the values tell you the way. Walk down from the root; while both targets are smaller go left, while both are larger go right. The first node they straddle is the answer.",
+      when: "The tree is a BST. Then there is no reason to recurse at all.",
+      watch: "The stopping condition is straddling, which includes the case where the node IS one of the targets. Testing for equality first is redundant." },
+
+    { n: "Parent pointers", cost: "O(h) time, O(1) space",
+      idea: "With a parent link on every node, walk both upward. Equalise the depths first, or use the two-runner trick: when one walker hits the root, restart it at the other node, and they meet at the answer.",
+      when: "The node objects carry a parent reference, which some versions of the problem hand you.",
+      watch: "This is the same trick as finding where two linked lists intersect, because it is literally the same problem." },
+
+    { n: "Binary lifting", cost: "O(n log n) build, O(log n) per query",
+      idea: "Precompute, for every node, its ancestor 1, 2, 4, 8 ... steps up. A query lifts the deeper node to the other's depth, then lifts both together by the largest jump that keeps them apart. One more step and they meet.",
+      when: "Many queries on one tree that never changes. This is the standard answer.",
+      watch: "The second loop must go from the largest jump downwards, and must only jump while the two ancestors differ. Jumping when they match overshoots past the answer." },
+
+    { n: "Euler tour plus range minimum", cost: "O(n log n) build, O(1) per query",
+      idea: "Flatten the tree by recording every node as you enter and leave it. The LCA of two nodes is the shallowest node in the stretch between their first appearances, which is a range minimum query.",
+      when: "Query cost matters more than build cost, or you already have a sparse table.",
+      watch: "Constant factors and the flattening code are both worse than binary lifting. Name it, reach for it rarely." },
+  ],
+
+  hing: `<p><b>Sawaal ko theek se samjho.</b> Tree mein root se har node tak <b>sirf ek</b> raasta hota hai. Do nodes ke raaste shuru mein same hote hain, phir ek jagah alag ho jaate hain. Bas wahi jagah answer hai. "Dono ka ancestor" kaafi nahi, kyunki uske upar wale sab bhi ancestor hain. Asli lafz hai <b>lowest</b>.</p>
+<p><b>Ulta socho.</b> Node se mat poocho "tere upar kya hai". Poocho <b>"tere neeche kya mila"</b>. Pehle dono bacchon mein utro, phir har node ek hi cheez wapas bhejta hai: ya to koi target jo usne neeche dhoonda, ya kuch nahi. Yeh post-order hai, wahi shape jo height nikalne mein use hota hai.</p>
+<p><b>Teen case, aur sirf ek dilchasp.</b> Dono taraf se kuch aaya, matlab targets alag-alag subtree mein hain, to raaste <b>yahin</b> alag hue, yeh node answer hai. Sirf ek taraf se aaya, to woh report upar bhej do. Kuch nahi aaya, to kuch nahi bhejo. Ek baar koi node khud ko report kar de, uske upar wale sabko sirf ek hi report dikhti hai, to woh bas aage badha dete hain. Isliye answer apne aap root tak tair kar aa jaata hai.</p>
+<p><b>Yeh line yaad rakho:</b> "agar yeh node khud target hai, to isi ko turant return kar do, neeche mat dekho". Isi ek line se woh case handle ho jaata hai jahan ek node doosre ke upar baitha hai. Log yahan extra if lagate hain aur baaki sab tod dete hain. Aur interview mein bolna: ek query O(n), lekin agar bahut saari queries hain to <b>binary lifting</b>, O(n log n) build aur O(log n) per query.</p>`,
+
+  viz: ["lca"],
+  see: [["VA", "https://visualgo.net/en/bst", "VisualGo, walk a tree one node at a time"]],
+
+  costs: [
+    ["recursive LCA, one query", "O(n) time", "worst case every node is visited once, and it must be, since the tree gives no hint where the targets are"],
+    ["recursion space", "O(h)", "one frame per level, so O(log n) balanced and O(n) on a path-shaped tree"],
+    ["LCA in a BST", "O(h) time, O(1) space", "the values steer the walk, so there is nothing to recurse into and nothing to remember"],
+    ["path comparison method", "O(n) time, O(h) space", "two searches plus two stored paths, correct and strictly more machinery"],
+    ["binary lifting, build", "O(n log n) time and space", "one row per power of two, each row read straight off the row below it"],
+    ["binary lifting, query", "O(log n)", "at most one jump per bit of the depth difference, then one paired descent"],
+    ["q queries, no preprocessing", "O(q · n)", "the number that decides whether preprocessing is worth it, and the constraints will tell you"],
+  ],
+
+  traps: [
+    "<b>Comparing values instead of nodes.</b> The classic version hands you node references. With duplicate values in the tree, comparing <code>node.val == p.val</code> finds the wrong node and the wrong answer.",
+    "<b>Adding a special case for \"one is the ancestor of the other\".</b> The base case already handles it. The extra branch is where the bug goes.",
+    "<b>Returning early from the left recursion.</b> Both sides must be explored before deciding. Returning as soon as the left side reports something skips the split point entirely.",
+    "<b>Assuming both nodes exist.</b> If one is missing you get the other one back and nothing complains. If absence is possible, count the matches on the way up and check the count at the end.",
+    "<b>Using the BST walk on a plain binary tree.</b> It is faster and it is wrong: without the ordering invariant the comparisons mean nothing.",
+    "<b>Binary lifting with the jump loop running upwards.</b> The paired descent must start from the largest power and shrink, and must jump only while the ancestors differ.",
+  ],
+
+  impl: [
+    ["Python", "sys.setrecursionlimit", "The default limit is about 1000 frames, so a skewed tree of 10^5 nodes needs the limit raised or an explicit stack."],
+    ["Java", "TreeNode ==", "Compare references with ==, not equals. The problem gives you the actual nodes, which is what makes reference comparison correct."],
+    ["C++", "TreeNode*", "Pointer comparison is the natural fit. Return nullptr for nothing found, and the truthiness tests read exactly like the pseudocode."],
+    ["JavaScript", "left || right", "Returning left || right is idiomatic and safe here, because a node object is never falsy. Do not copy the idiom to values."],
+  ],
+
+  code: {
+    pseudo: `# THE WHOLE ALGORITHM. Post-order: children first, decide on the way up.
+LCA(node, p, q):
+    if node is null:        return null
+    if node is p or node is q:  return node    # a node is its own ancestor
+    left  <- LCA(node.left,  p, q)
+    right <- LCA(node.right, p, q)
+    if left and right:      return node        # the paths split HERE
+    return left or right                       # forward the single report
+
+# IN A BST the values do the work. No recursion, no stack.
+LCA_bst(node, p, q):
+    while node:
+        if p.val < node.val and q.val < node.val:    node <- node.left
+        else if p.val > node.val and q.val > node.val: node <- node.right
+        else:  return node          # they straddle it, or it IS one of them
+
+# MANY QUERIES on a fixed tree: precompute jumps of 1, 2, 4, 8 ...
+build:   up[0][v] <- parent(v)
+         up[k][v] <- up[k-1][ up[k-1][v] ]        # a 2^k jump is two 2^(k-1)
+query:   lift the deeper node until the depths match
+         if they are now the same node, that is the answer
+         lift both by the LARGEST jump that keeps them different
+         return up[0][u]                          # one step more and they meet`,
+
+    py: `def lca(node, p, q):                  # p and q are NODES, not values
+    if node is None or node is p or node is q:
+        return node                   # a node is its own ancestor: no extra if
+    left  = lca(node.left,  p, q)
+    right = lca(node.right, p, q)     # BOTH sides, before deciding anything
+    if left and right:
+        return node                   # one target on each side: the split
+    return left or right              # forward whichever side reported
+
+def lca_bst(root, p, q):              # O(h) time, O(1) space
+    node = root
+    while node:
+        if p.val < node.val and q.val < node.val:    node = node.left
+        elif p.val > node.val and q.val > node.val:  node = node.right
+        else: return node             # straddled, or this node is a target
+    return None
+
+# Parent pointers instead of a tree walk. Same trick as two linked lists
+# meeting: each runner walks its own path, then the other one.
+def lca_parents(p, q):
+    a, b = p, q
+    while a is not b:                 # both cover depth(p) + depth(q) steps
+        a = a.parent if a else q
+        b = b.parent if b else p
+    return a
+
+# BINARY LIFTING. O(n log n) once, then O(log n) per query.
+LOG = 17                              # 2^17 > 10^5 nodes
+def build(n, parent):                 # parent[root] must point at the root
+    up = [[0] * n for _ in range(LOG)]
+    up[0] = parent[:]                 # up[k][v] = the 2^k-th ancestor of v
+    for k in range(1, LOG):
+        for v in range(n):
+            up[k][v] = up[k - 1][up[k - 1][v]]
+    return up
+
+def query(up, depth, u, v):
+    if depth[u] < depth[v]: u, v = v, u
+    diff = depth[u] - depth[v]
+    for k in range(LOG):              # bits of the gap: lift u level with v
+        if diff >> k & 1: u = up[k][u]
+    if u == v: return u               # v was an ancestor of u all along
+    for k in reversed(range(LOG)):    # largest jumps first, and only while
+        if up[k][u] != up[k][v]:      # the two ancestors still differ
+            u, v = up[k][u], up[k][v]
+    return up[0][u]                   # one step above where they still differ`,
+
+    java: `TreeNode lca(TreeNode node, TreeNode p, TreeNode q) {
+    if (node == null || node == p || node == q) return node;   // ==, not equals
+    TreeNode left  = lca(node.left,  p, q);
+    TreeNode right = lca(node.right, p, q);
+    if (left != null && right != null) return node;   // the paths split here
+    return left != null ? left : right;               // forward one report
+}
+
+TreeNode lcaBst(TreeNode node, TreeNode p, TreeNode q) {
+    while (node != null) {
+        if (p.val < node.val && q.val < node.val)      node = node.left;
+        else if (p.val > node.val && q.val > node.val) node = node.right;
+        else return node;
+    }
+    return null;
+}
+
+// Binary lifting: up[k][v] is the 2^k-th ancestor of v.
+int[][] build(int n, int[] parent, int LOG) {
+    int[][] up = new int[LOG][n];
+    up[0] = parent.clone();
+    for (int k = 1; k < LOG; k++)
+        for (int v = 0; v < n; v++) up[k][v] = up[k - 1][up[k - 1][v]];
+    return up;
+}
+
+// Recursion depth here is the tree HEIGHT, not log n. The JVM default stack
+// handles a few thousand frames; a 10^5-node path is a StackOverflowError.`,
+
+    cpp: `TreeNode* lca(TreeNode* node, TreeNode* p, TreeNode* q) {
+    if (!node || node == p || node == q) return node;   // pointer identity
+    TreeNode* left  = lca(node->left,  p, q);
+    TreeNode* right = lca(node->right, p, q);
+    if (left && right) return node;      // one target each side: the split
+    return left ? left : right;          // forward the single report
+}
+
+TreeNode* lcaBst(TreeNode* node, TreeNode* p, TreeNode* q) {
+    while (node) {
+        if (p->val < node->val && q->val < node->val)      node = node->left;
+        else if (p->val > node->val && q->val > node->val) node = node->right;
+        else return node;
+    }
+    return nullptr;
+}
+
+// Binary lifting. Size LOG so that 2^LOG exceeds the node count.
+vector<vector<int>> build(int n, const vector<int>& parent, int LOG) {
+    vector<vector<int>> up(LOG, vector<int>(n));
+    up[0] = parent;
+    for (int k = 1; k < LOG; k++)
+        for (int v = 0; v < n; v++) up[k][v] = up[k - 1][up[k - 1][v]];
+    return up;
+}
+
+// up[k-1][up[k-1][v]] reads the row you just finished, so the k loop must be
+// outside and the v loop inside. Swap them and you read a row of zeroes.`,
+
+    js: `function lca(node, p, q) {
+  if (node === null || node === p || node === q) return node;
+  const left  = lca(node.left,  p, q);
+  const right = lca(node.right, p, q);   // both sides before deciding
+  if (left && right) return node;        // one target on each side
+  return left || right;                  // a node object is never falsy
+}
+
+function lcaBst(node, p, q) {
+  while (node) {
+    if (p.val < node.val && q.val < node.val)      node = node.left;
+    else if (p.val > node.val && q.val > node.val) node = node.right;
+    else return node;
+  }
+  return null;
+}
+
+// Binary lifting: up[k][v] is the 2^k-th ancestor of v.
+function build(n, parent, LOG = 17) {
+  const up = Array.from({ length: LOG }, () => new Int32Array(n));
+  up[0].set(parent);
+  for (let k = 1; k < LOG; k++)
+    for (let v = 0; v < n; v++) up[k][v] = up[k - 1][up[k - 1][v]];
+  return up;
+}
+
+// No tail-call elimination in practice, so deep recursion still blows the
+// stack. On a skewed tree, convert to an explicit stack.`,
+  },
+  codecap: "Six lines do the whole job, and the base case is where the cleverness hides: returning the node itself covers the case people try to special-case. Everything below the first function is an optimisation for a tree you will query more than once.",
+
+  q: [
+    ["Why is \"an ancestor of both\" not a definition of the answer?", "Because every node above the answer also has both targets below it, all the way up to the root. The constraint that picks out one node is lowest: the last node before the two root-to-target paths separate."],
+    ["What exactly does each recursive call return?", "One of three things: a target node it found somewhere below, the answer once the answer has been identified, or nothing. The caller cannot tell those apart and does not need to, because the rule it applies is the same in every case."],
+    ["Why does the base case return the node when it is one of the targets, instead of looking below it?", "Because a node is its own ancestor. If the other target is underneath, this node is genuinely the lowest common ancestor, and stopping here returns it. If the other target is elsewhere, this report travels up and meets the second report at the real split point."],
+    ["Why can only one node ever see two non-empty reports?", "Once a node returns itself, every node above it receives exactly one non-empty report and forwards it unchanged. There is never a second non-empty report to pair it with, so no ancestor can mistake itself for the split point."],
+    ["Why is the BST version O(1) space when the general one is O(h)?", "The values say which way to go, so the walk never needs to try both sides and never needs to come back. With no branching there is nothing to remember, so the recursion collapses into a loop."],
+    ["A tree of 10^5 nodes and 10^5 queries. What changes?", "The plain recursion is O(q·n), which is 10^10 operations. Precompute the 2^k-th ancestor of every node in O(n log n), then each query lifts the deeper node level and walks both up together in O(log n), for about 10^6 total."],
+    ["What does this algorithm do if one of the two nodes is not in the tree?", "It returns the other one, confidently and without error, because a single report is indistinguishable from the answer. If absence is possible you must count how many targets were actually seen and check the count at the end."],
+  ],
+
+  p: [
+    [235, "lowest-common-ancestor-of-a-binary-search-tree", "LCA in a BST, where the values steer", "M"],
+    [236, "lowest-common-ancestor-of-a-binary-tree", "LCA, the archetype, six lines", "M"],
+    [1123, "lowest-common-ancestor-of-deepest-leaves", "LCA of the deepest leaves, return two things at once", "M"],
+    [865, "smallest-subtree-with-all-the-deepest-nodes", "The same problem wearing a different title", "M"],
+    [863, "all-nodes-distance-k-in-binary-tree", "Distance K, parent pointers turn the tree into a graph", "M"],
+    [2096, "step-by-step-directions-from-a-binary-tree-node-to-another", "Directions between two nodes, LCA plus two paths", "M"],
+    [1483, "kth-ancestor-of-a-tree-node", "Kth Ancestor, binary lifting on its own", "H"],
   ],
 },
 
@@ -4158,7 +4423,7 @@ function kthSmallest(root, k) {
     ["startsWith(prefix)", "O(len prefix)", "the reason the structure exists, a hash set cannot do this at all"],
     ["cost vs number of stored words", "independent", "you only ever walk your own letters, never anyone else's"],
     ["collect all words under a prefix", "O(len prefix + output)", "walk to the node, then DFS, and the DFS pays only for what it emits"],
-    ["memory, array children", "O(total chars x 26)", "fast indexing, most slots empty on sparse data"],
+    ["memory, array children", "O(total chars × 26)", "fast indexing, most slots empty on sparse data"],
     ["memory, map children", "O(total chars)", "pays only for real children, slightly slower per step"],
   ],
 
@@ -4377,6 +4642,287 @@ class Trie {
     [677, "map-sum-pairs", "Map Sum Pairs, prefix sums stored on nodes", "M"],
     [212, "word-search-ii", "Word Search II, trie-pruned DFS on a board", "H"],
     [421, "maximum-xor-of-two-numbers-in-an-array", "Maximum XOR, the bit trie", "M"],
+  ],
+},
+
+/* ==================================================================== */
+{
+  id: "lru",
+  n: "LRU cache, two structures at once",
+  group: "Data structures",
+  one: "Neither structure can do the job alone: a hash map has no order, a list has no lookup. <b>Hold the same nodes in both</b> and every operation is O(1).",
+
+  plain: `<p>A cache has a fixed capacity. It has to answer "what is the value for this key" quickly, and when it fills up it has to throw something away. Least recently used means it throws away whatever has gone longest without being touched.</p>
+<p>A hash map does the first half perfectly and the second half not at all: it finds a key in O(1) and has no concept of order, so it cannot tell you what is oldest. A linked list does the opposite: keep it ordered by recency and eviction is free, it is whatever sits at the tail, but finding a key means walking it, which is O(n).</p>
+<p>The move is to use both, over the same objects. The map's value is not the cached value, it is a <b>pointer to the list node</b> holding it. One map lookup and you are standing on the node, with no walking, and from there you can unlink and relink it in constant time. Every operation touches both structures, and they must stay in step: anything evicted has to leave the list and the map.</p>
+<p><b>Analogy.</b> A library with a card index and a shelf of returns. The index tells you instantly where a book is; the shelf keeps them in the order they were last read, so the one at the far end is the one nobody wants. Remove a book and you must pull its card too, or the index sends the next reader to an empty slot.</p>`,
+
+  why: [
+    { t: "Write down what the thing must do", d: "Two operations, both required to be O(1): <b>get</b> a value by key, and <b>put</b> a key, evicting the least recently used entry if that would exceed capacity. Reading a key counts as using it. The word 'both' is doing all the work, because each operation on its own is easy." },
+    { t: "A hash map answers half the question", d: "get is O(1) and put is O(1), and then capacity arrives and the map has nothing to offer. Hash maps are <b>unordered by construction</b>: the slot is computed from the key, so there is no sense in which one entry is older than another. Scanning for the oldest is O(n), which loses the requirement." },
+    { t: "A list answers the other half", d: "Keep entries in a list ordered by when they were last touched, newest at the head. Eviction is now free: the tail is the answer, by definition. But looking up a key means walking the list, <b>O(n)</b>, which loses the other requirement. Each structure is fast at exactly what the other is slow at." },
+    { t: "So hold the same objects in both", d: "Do not store values in the map. Store, for each key, <b>the list node itself</b>. The map turns a key into a position in O(1), and the list turns a position into an order in O(1). Neither structure duplicates the data; they are two indexes over one set of nodes." },
+    { t: "Unlinking is why the list must be doubly linked", d: "To remove a node you must reach the one <b>before</b> it, so its next pointer can be redirected. A singly linked list only offers that by walking from the head, which is the O(n) you just paid to avoid. A back pointer turns unlink into four assignments and nothing else." },
+    { t: "Two sentinel nodes delete every null check", d: "Put a permanent dummy at the head and another at the tail. Now every real node has a genuine neighbour on both sides, so unlink and insert are the same two lines whether the list is empty, full, or holding one item. This is the same trick as a dummy head on any linked-list problem." },
+    { t: "The two structures must never disagree", d: "Every write touches both. Evicting means unlinking the node <b>and</b> deleting its key from the map, which is why the node has to store its own key: standing on the tail node, you need to know what to delete. Miss that and the map points at a node no longer in the list, and get returns a value the cache does not hold." },
+    { t: "What this does not give you", d: "LRU is a guess, not a prediction: it assumes recent use predicts future use, which is false for a single long scan through cold data. And if you need frequency rather than recency, this shape does not stretch, LFU needs a second layer of lists grouped by count." },
+  ],
+
+  variants: [
+    { n: "LRU: map plus doubly linked list", cost: "O(1) get, O(1) put",
+      idea: "Key to node, nodes ordered by recency. Touching a node moves it to the head; eviction takes the tail.",
+      when: "The default cache question, asked more often than almost anything else on this page.",
+      watch: "The node must carry its own key, or the eviction cannot find what to delete from the map." },
+
+    { n: "LFU: map plus one list per frequency", cost: "O(1) get, O(1) put",
+      idea: "Two maps: key to node, and frequency count to a doubly linked list of the nodes with that count. A hit moves the node to the next count's list. Track the minimum live count so eviction knows where to look.",
+      when: "Eviction should be by how often, not how recently.",
+      watch: "The minimum count only ever increases by one, or resets to one on an insert. That is what keeps the eviction O(1) instead of a search." },
+
+    { n: "Insert, delete and get random in O(1)", cost: "O(1) all three",
+      idea: "A hash map from value to array index, plus an array of values. Deleting swaps the doomed element with the last one, fixes that one index in the map, and pops.",
+      when: "Random selection must be O(1), which a hash map alone cannot do.",
+      watch: "The swap has to update the map entry for the element that moved. Forgetting it leaves one stale index that fails much later." },
+
+    { n: "Min stack", cost: "O(1) push, pop and min",
+      idea: "The stack, plus a second stack holding the minimum as of each push. The same composition idea at its smallest: one structure for order, one for the aggregate.",
+      when: "Any \"and also report the min or max in O(1)\" wrapper around a stack.",
+      watch: "Push onto the min stack every time, including duplicates of the current minimum, or pop stops lining up with it." },
+
+    { n: "What your language already ships", cost: "O(1) amortised",
+      idea: "Python's OrderedDict, Java's LinkedHashMap with access order enabled, and C++'s std::list with iterators stored in a map are all this structure, already written.",
+      when: "Production. Also an interview, if you ask first and then offer to write it out.",
+      watch: "Reaching for it without being asked reads as dodging the question. Name it, then hand-roll the version the interviewer wanted." },
+  ],
+
+  viz: ["lru"],
+
+  hing: `<p><b>Do cheezein chahiye, aur koi ek structure dono nahi de sakta.</b> Hash map: key se value O(1), lekin usme <b>order hai hi nahi</b>, to purana kaun hai yeh bata hi nahi sakta. Linked list: recency ke hisaab se rakho to eviction free hai, tail utha lo, lekin key dhoondhne ke liye poori list chalni padegi, O(n). Har structure theek wahan tez hai jahan doosra slow hai.</p>
+<p><b>To dono use karo, ek hi nodes ke upar.</b> Map mein value mat rakho, <b>node ka pointer</b> rakho. Ek lookup aur tum seedhe us node par khade ho, chalna nahi pada. Yeh join hi poora answer hai.</p>
+<p><b>List doubly linked kyun?</b> Kisi node ko nikalne ke liye uske <b>pehle wale</b> node tak pahunchna padta hai. Singly list mein head se chalna padega, matlab wahi O(n) wapas. Back pointer se unlink char assignment ka kaam hai. Aur do <b>sentinel</b> nodes daal do, ek head par ek tail par, phir null check kabhi nahi karna padega, list khaali ho ya bhari, code same.</p>
+<p><b>Sabse badi galti:</b> evict karte waqt sirf list se nikaal dena aur map se bhoolna. Phir map ek aise node ko point karta rahega jo list mein hai hi nahi, aur get galat value de dega. Isliye <b>node apni key khud store karta hai</b>, taki tail par khade ho kar pata chale map se kya delete karna hai. Yeh line interview mein khud bol dena, poochne se pehle.</p>`,
+
+  costs: [
+    ["get(key), hit or miss", "O(1)", "one map lookup lands on the node, then four pointer writes move it, and nothing is scanned"],
+    ["put(key, value)", "O(1)", "map insert plus a relink, and the eviction is the tail, which is already known"],
+    ["eviction", "O(1)", "the tail sentinel's previous node is the victim, with no search and no comparison"],
+    ["unlink a node in a DOUBLY linked list", "O(1)", "the predecessor is one field away, which is the entire reason for the back pointer"],
+    ["unlink a node in a SINGLY linked list", "O(n)", "the predecessor has to be found by walking from the head, which undoes the map"],
+    ["space", "O(capacity)", "one node and one map entry per cached key, so roughly two references of overhead each"],
+    ["find the oldest with a hash map alone", "O(n)", "hash maps have no order at all, and this is the gap the list exists to fill"],
+  ],
+
+  traps: [
+    "<b>Storing the value in the map instead of the node.</b> Then a hit still has to find the node in the list to move it, which is O(n), and the whole design collapses.",
+    "<b>Evicting from the list but not the map.</b> The map keeps a key pointing at a node that is no longer cached, and get happily returns it. The node must store its own key so the eviction knows what to delete.",
+    "<b>Using a singly linked list.</b> Unlinking needs the predecessor. Without a back pointer you walk to find it, and the O(1) promise is gone.",
+    "<b>Treating get as a read-only operation.</b> A successful get is a use, so it must move the node to the head. Skipping that evicts entries that were just read.",
+    "<b>Forgetting that put on an existing key is also a use.</b> Overwriting a value must refresh recency too, and must not insert a second node for the same key.",
+    "<b>Skipping the sentinels.</b> Without them, every insert and unlink needs branches for empty, single-element and head or tail cases, and one of those four branches will be wrong.",
+  ],
+
+  impl: [
+    ["Python", "collections.OrderedDict", "move_to_end and popitem(last=False) are exactly this structure. A plain dict preserves insertion order but cannot re-order in O(1)."],
+    ["Java", "LinkedHashMap(cap, 0.75f, true)", "The third argument switches to access order; override removeEldestEntry and the cache is four lines. Say you know this, then write the real one."],
+    ["C++", "std::list + unordered_map", "splice moves a node between positions in O(1) and leaves iterators valid, which is why the map can store iterators safely."],
+    ["JavaScript", "Map", "Map keeps insertion order, so delete-then-set is a move-to-back and keys().next() is the oldest key. Convenient, and not the doubly linked list you were asked for."],
+  ],
+
+  code: {
+    pseudo: `# TWO STRUCTURES over the SAME nodes.
+#   map:  key -> the NODE holding that key   (not the value: the node)
+#   list: doubly linked, head = just used, tail = next to be evicted
+#   sentinels: a permanent head and tail node, so nothing is ever null
+
+get(key):
+    if key not in map:  return MISS
+    node <- map[key]
+    unlink(node);  push_front(node)     # a read counts as a use
+    return node.value
+
+put(key, value):
+    if key in map:
+        node <- map[key];  node.value <- value
+        unlink(node);  push_front(node)     # a write counts as a use too
+        return
+    if size = capacity:
+        victim <- tail.prev                 # by definition the oldest
+        unlink(victim)
+        delete map[victim.key]              # BOTH, or the map points at a ghost
+    node <- new Node(key, value)            # the node stores its own KEY
+    map[key] <- node
+    push_front(node)
+
+# The two primitives. No null checks anywhere, because of the sentinels.
+unlink(n):      n.prev.next <- n.next;  n.next.prev <- n.prev
+push_front(n):  n.prev <- head;  n.next <- head.next
+                head.next.prev <- n;  head.next <- n`,
+
+    py: `class Node:
+    __slots__ = ("key", "val", "prev", "next")
+    def __init__(self, key=0, val=0):
+        self.key, self.val = key, val    # the KEY is stored so eviction can
+        self.prev = self.next = None     # delete it from the map
+
+class LRUCache:
+    def __init__(self, capacity):
+        self.cap = capacity
+        self.map = {}                            # key -> Node, never -> value
+        self.head, self.tail = Node(), Node()    # sentinels: no null checks
+        self.head.next, self.tail.prev = self.tail, self.head
+
+    def _unlink(self, n):
+        n.prev.next, n.next.prev = n.next, n.prev
+
+    def _push_front(self, n):
+        n.prev, n.next = self.head, self.head.next
+        self.head.next.prev = n
+        self.head.next = n
+
+    def get(self, key):
+        n = self.map.get(key)
+        if n is None: return -1
+        self._unlink(n); self._push_front(n)     # a read IS a use
+        return n.val
+
+    def put(self, key, value):
+        n = self.map.get(key)
+        if n is not None:
+            n.val = value
+            self._unlink(n); self._push_front(n)
+            return
+        if len(self.map) == self.cap:
+            victim = self.tail.prev              # the oldest, by definition
+            self._unlink(victim)
+            del self.map[victim.key]             # BOTH structures, always
+        n = Node(key, value)
+        self.map[key] = n
+        self._push_front(n)
+
+# The library already is this structure. Say so, then write the above.
+from collections import OrderedDict
+od = OrderedDict()
+od.move_to_end(key)                  # mark as most recently used
+od.popitem(last=False)               # evict the oldest`,
+
+    java: `// LinkedHashMap already IS a hash map plus a doubly linked list. Access
+// order plus one override is a working cache, and is worth naming out loud
+// before you write the version the question is actually asking for.
+class LRUCache extends LinkedHashMap<Integer, Integer> {
+    private final int cap;
+    LRUCache(int capacity) {
+        super(capacity, 0.75f, true);        // true = ACCESS order
+        this.cap = capacity;
+    }
+    @Override
+    protected boolean removeEldestEntry(Map.Entry<Integer, Integer> e) {
+        return size() > cap;                 // checked after every insertion
+    }
+}
+
+// The hand-rolled parts. Sentinels mean neither method checks for null.
+class Node { int key, val; Node prev, next; }
+
+void unlink(Node n) {
+    n.prev.next = n.next;
+    n.next.prev = n.prev;
+}
+
+void pushFront(Node head, Node n) {
+    n.prev = head;
+    n.next = head.next;
+    head.next.prev = n;
+    head.next = n;
+}`,
+
+    cpp: `// list::splice moves a node to another position in O(1) WITHOUT copying it,
+// and leaves every iterator valid. That guarantee is what lets the map hold
+// iterators instead of pointers, and it is the whole reason this is short.
+class LRUCache {
+    int cap;
+    list<pair<int, int>> dll;                   // front = most recently used
+    unordered_map<int, list<pair<int, int>>::iterator> map;
+public:
+    LRUCache(int capacity) : cap(capacity) {}
+
+    int get(int key) {
+        auto it = map.find(key);
+        if (it == map.end()) return -1;
+        dll.splice(dll.begin(), dll, it->second);      // move to front, O(1)
+        return it->second->second;
+    }
+
+    void put(int key, int value) {
+        auto it = map.find(key);
+        if (it != map.end()) {
+            it->second->second = value;
+            dll.splice(dll.begin(), dll, it->second);
+            return;
+        }
+        if ((int) dll.size() == cap) {
+            map.erase(dll.back().first);        // erase from BOTH structures
+            dll.pop_back();
+        }
+        dll.emplace_front(key, value);
+        map[key] = dll.begin();
+    }
+};`,
+
+    js: `// Map keeps INSERTION order, so delete-then-set is a move-to-back and the
+// first key from keys() is the oldest. Honest caveat: this is not the
+// doubly linked list an interviewer asking for LRU wants to see.
+class LRUCache {
+  constructor(capacity) {
+    this.cap = capacity;
+    this.map = new Map();
+  }
+
+  get(key) {
+    if (!this.map.has(key)) return -1;
+    const val = this.map.get(key);
+    this.map.delete(key);          // remove and re-insert: now it is newest
+    this.map.set(key, val);
+    return val;
+  }
+
+  put(key, value) {
+    if (this.map.has(key)) {
+      this.map.delete(key);        // so the re-insert lands at the back
+    } else if (this.map.size === this.cap) {
+      this.map.delete(this.map.keys().next().value);   // the oldest key
+    }
+    this.map.set(key, value);
+  }
+}
+
+// The primitives, for when the hand-rolled list is what was asked for.
+const unlink = (n) => { n.prev.next = n.next; n.next.prev = n.prev; };
+const pushFront = (head, n) => {
+  n.prev = head; n.next = head.next;
+  head.next.prev = n; head.next = n;
+};`,
+  },
+  codecap: "The C++ and Java versions look like cheating and are not: knowing that std::list keeps iterators valid across a splice, or that LinkedHashMap has an access-order mode, is the same knowledge as writing the pointers by hand. Say which one you are doing, and why.",
+
+  q: [
+    ["Why can a hash map not implement an LRU cache on its own?", "It has no order. The slot is computed from the key, so nothing records which entry was touched longest ago, and finding the oldest would mean scanning every entry, which is O(n)."],
+    ["Why can a linked list not do it on its own?", "It has the order for free, newest at the head and the victim at the tail, but locating a key means walking the list, which is O(n). Each structure is fast at exactly the thing the other is slow at."],
+    ["What does the hash map actually store, and why does that choice matter?", "The list node, not the value. Storing the value would leave you still needing to find that node in the list to move it, which is the O(n) walk you were avoiding. Storing the node means one lookup lands you on it."],
+    ["Why must the list be doubly linked?", "Unlinking a node requires redirecting the pointer of the node before it, and only a back pointer gives you that in O(1). With a singly linked list you would walk from the head to find the predecessor."],
+    ["Why does each node store its own key?", "Eviction starts from the tail node and must also delete that entry from the map. Standing on a node, the only way to know which map key to remove is for the node to carry it."],
+    ["What are the two sentinel nodes for?", "They give every real node a genuine neighbour on both sides, so insert and unlink are the same two lines whether the list is empty, holds one item, or the node is at either end. It removes four branches, one of which would have been wrong."],
+    ["Is a successful get a read or a write?", "A write. Reading a key counts as using it, so the node must move to the head. Treating get as read-only means recently read entries get evicted, and the cache passes small tests while behaving wrongly under load."],
+    ["What is the general pattern worth taking from this?", "When one structure is fast at exactly what another is slow at, hold the same objects in both and keep them in step on every write. LFU, insert-delete-get-random and min stack are all the same move with different partners."],
+  ],
+
+  p: [
+    [706, "design-hashmap", "Design HashMap, the buckets by hand", "E"],
+    [155, "min-stack", "Min Stack, the smallest version of the same idea", "M"],
+    [380, "insert-delete-getrandom-o1", "Insert Delete GetRandom, map plus array, swap with last", "M"],
+    [146, "lru-cache", "LRU Cache, the archetype", "M"],
+    [1472, "design-browser-history", "Browser History, when a plain list is genuinely enough", "M"],
+    [895, "maximum-frequency-stack", "Maximum Frequency Stack, a stack per count", "H"],
+    [460, "lfu-cache", "LFU Cache, one list per frequency", "H"],
   ],
 },
 
@@ -6117,7 +6663,7 @@ prim(start):
 
 # KRUSKAL. The component test is union-find and nothing else; its own page
 # explains why find and union are near constant. Here it is a black box.
-def kruskal(n, edges):                   # edges as (w, u, v), nodes 0..n-1
+def kruskal(n, edges, reverse=False):    # edges as (w, u, v), nodes 0..n-1
     parent = list(range(n))
 
     def find(x):
@@ -6127,14 +6673,14 @@ def kruskal(n, edges):                   # edges as (w, u, v), nodes 0..n-1
         return x
 
     total, kept = 0, 0
-    for w, u, v in sorted(edges):        # cheapest first: the greedy order
+    for w, u, v in sorted(edges, reverse=reverse):    # the greedy order
         ru, rv = find(u), find(v)
         if ru == rv:
             continue                     # same component, so this is a cycle
         parent[ru] = rv
         total += w
         kept += 1
-    return total if kept == n - 1 else -1     # -1: the graph was disconnected
+    return total if kept == n - 1 else None   # None: the graph was disconnected
 
 
 # PRIM. Dijkstra's loop with exactly one term removed, marked below.
@@ -6152,12 +6698,13 @@ def prim(adj, n, start=0):               # adj[u] = [(v, weight), ...]
         for v, wt in adj[u]:
             if not in_tree[v]:
                 heapq.heappush(heap, (wt, v))    # wt alone, NOT total + wt
-    return total if kept == n else -1
+    return total if kept == n else None
 
 
-# Maximum spanning tree: negate, run the same code, negate the answer.
+# MAXIMUM spanning tree: reverse the order, change nothing else. Negating the
+# weights instead also works, right up until you negate the -1 sentinel too.
 def max_spanning_tree(n, edges):
-    return -kruskal(n, [(-w, u, v) for w, u, v in edges])`,
+    return kruskal(n, edges, reverse=True)`,
 
     java: `// KRUSKAL: sort, then keep an edge only when its ends sit in different
 // components. That test is a union-find, borrowed from its own page.
@@ -7124,7 +7671,7 @@ function solveNQueens(n) {
 
   variants: [
     { n: "One dimension over an index", cost: "O(n) states, usually O(1) transitions",
-      idea: "State is a single position. <code>dp[i]</code> depends on a fixed number of earlier cells. Climbing stairs, house robber, maximum subarray, decode ways.",
+      idea: "State is a single position. <code>dp[i]</code> depends on a fixed number of earlier cells. Climbing stairs, house robber, decode ways, and maximum subarray, which is this case reduced so far that the table becomes one variable. It has its own page.",
       when: "The answer at each position depends only on a bounded window of earlier positions.",
       watch: "Almost always reducible to a couple of variables. If you leave the whole array allocated, expect to be asked why." },
 
@@ -7689,6 +8236,249 @@ function coinChangeGreedy(coins, target) {
 
 /* ==================================================================== */
 {
+  id: "string-search",
+  n: "String search and KMP",
+  group: "Algorithms",
+  one: "The naive scan throws away every character it just matched. <b>Precompute how much of a failed match is still usable</b> and the text pointer never has to go backwards.",
+
+  plain: `<p>Find every place a pattern occurs inside a longer text. The obvious method lines the pattern up at position 0, compares left to right, and on the first mismatch slides one place right and starts over. It is correct, it is three lines, and on adversarial input it is O(n·m).</p>
+<p>Look at what a failed attempt actually learns. If four characters matched before the fifth failed, those four characters are not a mystery: they are the pattern's own first four, and you know them before the text arrives. So you can work out, in advance and from the pattern alone, how far you are allowed to slide without skipping a possible match.</p>
+<p>The answer is the longest piece that is both a <b>prefix and a suffix</b> of what matched. If "abab" matched, it starts and ends with "ab", so sliding by two keeps that "ab" aligned and you resume comparing from the third character. Precompute that number for every prefix of the pattern and the text pointer never moves backwards again, which makes the scan O(n + m).</p>
+<p><b>Analogy.</b> Losing your place while reading a phone number aloud. You do not go back to the first digit; you notice the last few you said are also how it starts, and pick up from there.</p>`,
+
+  why: [
+    { t: "The naive scan is fine until it is not", d: "Try every starting position and compare until a mismatch. On ordinary English it is nearly linear, because mismatches come almost immediately. On <b>aaaaaaaaab</b> searched for <b>aaab</b>, every position matches most of the pattern before failing, and the cost is the full <b>O(n·m)</b>. Interview constraints are set to produce exactly that input." },
+    { t: "Ask what a failed attempt already told you", d: "When the match dies at offset j, the previous j characters of the text are known: they are <b>the pattern's own first j characters</b>. Sliding by one throws that away and re-reads them. Any algorithm that re-reads what it has already confirmed is leaving work on the table." },
+    { t: "The right question is about the pattern, not the text", d: "How far can the pattern slide without skipping a match? Far enough that the part still under it lines up. That means the longest piece of the matched prefix that is <b>also a suffix</b> of it. For \"abab\" that is \"ab\", length 2. This depends only on the pattern, so it can be computed once, before the text is even read." },
+    { t: "That table is the prefix function", d: "lps[i] is the length of the longest proper prefix of pattern[0..i] that is also a suffix of it. Proper means not the whole thing, or the answer would always be trivial. On a mismatch after j matched characters, fall back to <b>lps[j-1]</b>: that many characters are still known good, so keep them and resume." },
+    { t: "The table is built by the same trick, on itself", d: "Building lps is the pattern searched inside the pattern, with the same fall-back rule. That sounds circular and is not: computing lps[i] only ever reads entries before i, which are already final. It is <b>O(m)</b>, and it is the part people cannot reconstruct under pressure." },
+    { t: "Why the total is linear, said properly", d: "The text index only ever increases, at most n times. The pattern index increases at most once per text step, so across the whole run it can only <b>decrease</b> n times in total. The fall-back loop looks nested and is paid for by forward progress already made. This is the same amortised argument as the monotonic stack." },
+    { t: "There is a second route to the same bound", d: "Rabin-Karp hashes each window of the text with a rolling hash, so sliding one place costs one multiply and one subtract. Equal hashes mean a <b>probable</b> match, so you still compare the characters to confirm. Same O(n + m) expected, and it generalises to many patterns at once, which KMP does not." },
+    { t: "Be honest about when you need any of this", d: "The built-in <code>find</code> or <code>indexOf</code> is a naive scan with tricks and beats KMP on almost every real input. What KMP buys is the <b>worst-case guarantee</b>, and the prefix function itself, which is what problems about repeated substrings and shortest palindromes actually want." },
+  ],
+
+  viz: ["kmp"],
+
+  hing: `<p><b>Naive tareeka:</b> pattern ko index 0 par rakho, compare karo, mismatch hote hi ek jagah aage sarka kar dobara shuru. Sahi hai, teen line hai, aur <b>aaaaaaaaab</b> mein <b>aaab</b> dhoondo to har position par poora pattern lagbhag match hota hai phir fail hota hai. Yahi <b>O(n·m)</b> hai, aur interview ke constraints theek yahi input banane ke liye set kiye jaate hain.</p>
+<p><b>Ab socho ki fail hone se kya pata chala.</b> Agar mismatch offset j par hua, to pichhle j characters koi rahasya nahi hain: woh <b>pattern ke hi pehle j characters</b> hain, jo tumhe text aane se pehle se maloom the. Ek jagah sarakna un sab ko phenk dena hai.</p>
+<p><b>Asli sawaal pattern ke baare mein hai, text ke baare mein nahi.</b> Kitna sarak sakte ho bina kisi match ko chhode? Utna, jitna neeche wala hissa phir se line mein aa jaaye. Matlab: jo hissa match hua, uska sabse bada <b>prefix jo suffix bhi ho</b>. "abab" ka jawaab "ab" hai, length 2. Yeh sirf pattern par depend karta hai, isliye ek baar pehle hi nikal lo. Yahi <code>lps</code> table hai.</p>
+<p><b>Linear kyun hai, yeh line bolna:</b> text ka index kabhi peeche nahi jaata, zyada se zyada n baar aage badhta hai. Pattern ka index har step mein ek baar hi badhta hai, isliye poore run mein woh kul milakar n baar hi <b>ghat</b> sakta hai. Andar wala while loop dikhne mein nested hai, par uska paisa pehle hi bhara ja chuka hai. Aur haan, interview mein pehle <code>indexOf</code> bol dena, phir KMP: usse pata chalta hai ki tumhe worst case aur practice ka farak samajh aata hai.</p>`,
+
+  costs: [
+    ["naive scan", "O(n·m) worst, O(n) typical", "each start compares until a mismatch, and on random text that happens within a character or two"],
+    ["build the lps table", "O(m) time, O(m) space", "the pattern matched against itself, with the same fall-back rule and no text involved"],
+    ["KMP scan", "O(n) time", "each text index is entered once, and the fall-back loop is paid for by forward progress already made"],
+    ["KMP total", "O(n + m)", "the guarantee, not the average: this is the number that matters when the input is chosen to hurt"],
+    ["Rabin-Karp", "O(n + m) expected", "one multiply and one subtract per slide, plus an O(m) verification on every hash hit"],
+    ["Rabin-Karp, worst case", "O(n·m)", "if the hash collides at every position, every window is verified character by character"],
+    ["Z-algorithm", "O(n + m) time and space", "the same information in a different table, often shorter to write and easier to get right"],
+    ["many patterns at once", "O(n + total pattern length)", "Aho-Corasick, a trie with KMP fall-back links, and the reason KMP is worth understanding"],
+  ],
+
+  traps: [
+    "<b>Advancing the text index after a fall-back.</b> The fall-back moves only the pattern index. Advancing both skips the character that just failed, and it will be re-compared against the wrong pattern position.",
+    "<b>Falling back to lps[j] instead of lps[j-1].</b> j is the count of matched characters, so the last matched index is j-1. Off by one here still finds most matches, which is worse than finding none.",
+    "<b>Not resetting after a full match.</b> On a match, set j to lps[m-1] rather than 0, or overlapping occurrences are missed. Searching \"aaa\" in \"aaaa\" must find two, not one.",
+    "<b>Forgetting to verify a Rabin-Karp hit.</b> Equal hashes mean probably equal. Skipping the character comparison gives an algorithm that is right on your tests and wrong in production.",
+    "<b>Building a regex out of the pattern string.</b> A dot, a bracket or a plus sign in the input becomes syntax, and the search silently matches the wrong thing.",
+    "<b>Reaching for KMP when the built-in would do.</b> Say indexOf first and say why it is O(n·m) in the worst case. Writing KMP unprompted answers a question nobody asked.",
+  ],
+
+  impl: [
+    ["Python", "str.find / str.index", "A naive scan with a two-way fallback, so linear in practice. find returns -1 and index raises, which is the only difference."],
+    ["Java", "String.indexOf", "Naive with a small optimisation, O(n·m) in the worst case. charAt in a loop is fine; toCharArray once is faster in a hot loop."],
+    ["C++", "std::search", "Since C++17 it takes a searcher, and boyer_moore_searcher from <functional> beats anything you will write under time pressure."],
+    ["JavaScript", "String.indexOf / includes", "Engine-dependent, usually a naive scan with a memchr-style skip. Never build a RegExp from an untrusted pattern string."],
+  ],
+
+  code: {
+    pseudo: `# STEP 1. Build the table from the PATTERN alone. No text involved.
+# lps[i] = length of the longest PROPER prefix of p[0..i] that is also
+#          a suffix of p[0..i].   For "abab" that is "ab", so lps[3] = 2.
+build_lps(p):
+    lps[0] <- 0
+    len <- 0                      # how much of the prefix currently matches
+    for i from 1 to m-1:
+        while len > 0 and p[i] != p[len]:
+            len <- lps[len - 1]   # fall back, and do NOT touch i
+        if p[i] = p[len]:  len <- len + 1
+        lps[i] <- len
+
+# STEP 2. Scan the text. i only ever moves FORWARD. j is the pattern index.
+search(text, p):
+    j <- 0
+    for i from 0 to n-1:
+        while j > 0 and text[i] != p[j]:
+            j <- lps[j - 1]       # keep the overlap, drop the rest
+        if text[i] = p[j]:  j <- j + 1
+        if j = m:
+            report a match starting at i - m + 1
+            j <- lps[m - 1]       # not 0, or overlapping matches are missed
+
+# WHY IT IS LINEAR: i rises at most n times. j rises at most once per step,
+# so across the whole run it can only FALL n times. The inner while loop is
+# already paid for. Same argument as the monotonic stack.
+
+# RABIN-KARP, the other route. Roll a hash over each window:
+#   drop the leaving character, shift, add the joining one.
+# Equal hashes mean PROBABLY equal, so compare the characters to confirm.`,
+
+    py: `def build_lps(p):                     # O(m). The pattern against itself.
+    lps = [0] * len(p)
+    length = 0                        # how much of the prefix matches now
+    for i in range(1, len(p)):
+        while length and p[i] != p[length]:
+            length = lps[length - 1]  # fall back, never straight to zero
+        if p[i] == p[length]:
+            length += 1
+        lps[i] = length
+    return lps
+
+def kmp(text, p):                     # every start index where p occurs
+    if not p: return [0]
+    lps, out, j = build_lps(p), [], 0
+    for i, ch in enumerate(text):     # i NEVER goes backwards. That is the point.
+        while j and ch != p[j]:
+            j = lps[j - 1]            # the only backward move, and it is j
+        if ch == p[j]:
+            j += 1
+        if j == len(p):
+            out.append(i - j + 1)
+            j = lps[j - 1]            # keep going: overlapping matches count
+    return out
+
+# RABIN-KARP: one multiply and one subtract per slide, then VERIFY.
+def rabin_karp(text, p, base=257, mod=(1 << 61) - 1):
+    n, m = len(text), len(p)
+    if m > n or m == 0: return []
+    high = pow(base, m - 1, mod)      # the weight of the leaving character
+    hp = hw = 0
+    for i in range(m):                # hash the pattern and the first window
+        hp = (hp * base + ord(p[i])) % mod
+        hw = (hw * base + ord(text[i])) % mod
+    out = []
+    for i in range(n - m + 1):
+        if hp == hw and text[i:i + m] == p:   # VERIFY: hashes collide
+            out.append(i)
+        if i + m < n:                 # drop the leaver, shift, add the joiner
+            hw = ((hw - ord(text[i]) * high) * base + ord(text[i + m])) % mod
+    return out
+
+# And the answer to give first, before offering either of the above:
+text.find(p)                          # O(n*m) worst case, linear in practice`,
+
+    java: `int[] buildLps(String p) {
+    int[] lps = new int[p.length()];
+    int len = 0;
+    for (int i = 1; i < p.length(); i++) {
+        while (len > 0 && p.charAt(i) != p.charAt(len)) len = lps[len - 1];
+        if (p.charAt(i) == p.charAt(len)) len++;
+        lps[i] = len;                 // lps[0] stays 0, by definition
+    }
+    return lps;
+}
+
+int kmp(String text, String p) {      // first match index, or -1
+    if (p.isEmpty()) return 0;
+    int[] lps = buildLps(p);
+    int j = 0;
+    for (int i = 0; i < text.length(); i++) {
+        while (j > 0 && text.charAt(i) != p.charAt(j)) j = lps[j - 1];
+        if (text.charAt(i) == p.charAt(j)) j++;
+        if (j == p.length()) return i - j + 1;
+    }
+    return -1;
+}
+
+// String.indexOf is a naive scan with one optimisation, so it is O(n*m) in
+// the worst case and faster than this on essentially every real input.
+// charAt is a bounds check per call; toCharArray once is cheaper in a loop.`,
+
+    cpp: `vector<int> buildLps(const string& p) {
+    vector<int> lps(p.size(), 0);
+    int len = 0;
+    for (size_t i = 1; i < p.size(); i++) {
+        while (len > 0 && p[i] != p[len]) len = lps[len - 1];
+        if (p[i] == p[len]) len++;
+        lps[i] = len;
+    }
+    return lps;
+}
+
+int kmp(const string& text, const string& p) {     // first index, or -1
+    if (p.empty()) return 0;
+    vector<int> lps = buildLps(p);
+    int j = 0;
+    for (size_t i = 0; i < text.size(); i++) {
+        while (j > 0 && text[i] != p[j]) j = lps[j - 1];
+        if (text[i] == p[j]) j++;
+        if (j == (int) p.size()) return (int) (i - j + 1);
+    }
+    return -1;
+}
+
+// size() is unsigned, so compare j against a cast size or the comparison is
+// promoted and a negative j would silently become enormous.
+// std::search with boyer_moore_searcher (<functional>, C++17) is the version
+// to reach for when you are allowed to, and it is genuinely faster.`,
+
+    js: `function buildLps(p) {
+  const lps = new Array(p.length).fill(0);
+  let len = 0;
+  for (let i = 1; i < p.length; i++) {
+    while (len > 0 && p[i] !== p[len]) len = lps[len - 1];
+    if (p[i] === p[len]) len++;
+    lps[i] = len;
+  }
+  return lps;
+}
+
+function kmp(text, p) {                // every match index
+  if (!p) return [0];
+  const lps = buildLps(p), out = [];
+  let j = 0;
+  for (let i = 0; i < text.length; i++) {
+    while (j > 0 && text[i] !== p[j]) j = lps[j - 1];
+    if (text[i] === p[j]) j++;
+    if (j === p.length) {
+      out.push(i - j + 1);
+      j = lps[j - 1];                  // not 0: overlapping matches count
+    }
+  }
+  return out;
+}
+
+// indexOf is the honest first answer. A RegExp built from the pattern is
+// not: a dot, a bracket or a plus in the input becomes syntax, and the
+// search quietly matches something else entirely.
+text.indexOf(p);`,
+  },
+  codecap: "The scan is eight lines and the table is six, and the table is the one nobody can reconstruct cold. Learn build_lps first: it is the same fall-back rule as the search, which is why the two functions look like each other.",
+
+  q: [
+    ["What exactly does the naive scan waste?", "Everything it just confirmed. When the match fails at offset j, the previous j characters of the text are known to equal the pattern's first j characters, and sliding by one re-reads them from scratch. On input like aaaa...aab that repeats at every position, giving O(n·m)."],
+    ["What does lps[i] mean, and why must the prefix be proper?", "The length of the longest prefix of pattern[0..i] that is also a suffix of it. Proper means it cannot be the whole string, because the whole string is trivially both, and the table would say nothing."],
+    ["On a mismatch after j matched characters, why fall back to lps[j-1]?", "j counts matched characters, so the last matched index is j-1. lps[j-1] is how much of that match is still aligned after the slide, so those characters are known good and comparison resumes at pattern index lps[j-1]."],
+    ["Why does the text index never move backwards?", "Because the slide is done by moving the pattern index down, not by rewinding the text. Everything the fall-back keeps was already verified, so there is nothing behind the current text position left to check."],
+    ["The search has a while loop inside a for loop. Why is it still O(n)?", "The pattern index rises at most once per text character, so at most n times in total, and the inner loop only ever lowers it. It cannot fall more often than it rose. The same amortised argument as the monotonic stack."],
+    ["Why must Rabin-Karp compare characters after the hashes match?", "Because a hash maps many strings to one value, so equal hashes mean probably equal, not equal. Skipping the check produces an algorithm that passes every test you write and reports false matches on real data."],
+    ["After finding a match, why set j to lps[m-1] rather than 0?", "Because occurrences can overlap. Searching for aaa in aaaa must report two matches, and resetting to 0 throws away the overlap that produces the second one."],
+    ["When should you actually reach for KMP?", "When the worst case matters, or when the prefix function itself is the answer. Repeated substring patterns, shortest palindrome and longest happy prefix are all lps questions wearing different titles. For plain substring search, the built-in is faster in practice and should be named first."],
+  ],
+
+  p: [
+    [28, "find-the-index-of-the-first-occurrence-in-a-string", "Find the First Occurrence, naive then KMP", "E"],
+    [459, "repeated-substring-pattern", "Repeated Substring Pattern, one lps lookup answers it", "E"],
+    [686, "repeated-string-match", "Repeated String Match, how many copies before a match", "M"],
+    [187, "repeated-dna-sequences", "Repeated DNA, rolling hash over a fixed window", "M"],
+    [214, "shortest-palindrome", "Shortest Palindrome, lps of s plus reversed s", "H"],
+    [1392, "longest-happy-prefix", "Longest Happy Prefix, literally the last lps entry", "H"],
+    [1044, "longest-duplicate-substring", "Longest Duplicate Substring, binary search plus rolling hash", "H"],
+  ],
+},
+
+/* ==================================================================== */
+{
   id: "prefix-sums",
   n: "Prefix sums",
   group: "Patterns",
@@ -7982,6 +8772,263 @@ function applyUpdates(n, updates) {
     [523, "continuous-subarray-sum", "Continuous Subarray Sum, store the first index per remainder", "M"],
     [304, "range-sum-query-2d-immutable", "Range Sum Query 2D, inclusion exclusion", "M"],
     [1109, "corporate-flight-bookings", "Corporate Flight Bookings, difference array", "M"],
+  ],
+},
+
+/* ==================================================================== */
+{
+  id: "kadane",
+  n: "Kadane and maximum subarray",
+  group: "Patterns",
+  one: "At each index there are only two candidates: extend the block that ended one step back, or start a new one here. <b>Keep the better; track the best separately.</b>",
+
+  plain: `<p>You are given an array with positive and negative numbers and asked for the contiguous stretch with the largest total. Contiguous is the hard word: you cannot pick the good numbers and skip the bad ones, so "take all the positives" is not the answer.</p>
+<p>Checking every stretch means choosing a start and an end, which is about n squared of them. The trick is to stop asking the question that way. Instead of "what is the best block anywhere", ask "what is the best block that <b>ends exactly at index i</b>". There is only one answer per index, so there are only n answers to find, and each one turns out to depend on nothing but the answer before it.</p>
+<p>Because whatever block ends at i, it either includes i-1 or it does not. If it does, it is the best block ending at i-1 with a[i] stuck on the end. If it does not, it is just a[i] on its own. Two candidates, take the larger, move on. That is the entire algorithm, and it fits on two lines.</p>
+<p><b>Analogy.</b> Walking a hilly path, keeping a running altitude. Whenever your accumulated total drops below zero, the ground behind you is a net cost to carry, so you drop it and start measuring from where you stand. You still remember the highest point you ever reached.</p>`,
+
+  why: [
+    { t: "Start from what brute force wastes", d: "Trying every (start, end) pair is <b>O(n²)</b> once you carry a running sum, and O(n³) if you re-add each block from scratch. But the block from 3 to 7 and the block from 3 to 8 share almost everything. Any time two candidates overlap that heavily, there is a cheaper formulation." },
+    { t: "Ask a smaller question with a unique answer", d: "\"The best block anywhere\" has n² candidates. \"The best block <b>ending at index i</b>\" has exactly one answer per index, so the whole problem becomes n small questions. The real answer is then just the largest of those n, which is one more pass, or the same pass." },
+    { t: "Each index has exactly two candidates", d: "A block ending at i either contains i-1 or it does not. If it does, it is the best block ending at i-1, extended by a[i]. If it does not, it is a[i] alone. <b>Nothing else can end at i</b>, so comparing those two is not a heuristic, it is exhaustive." },
+    { t: "So the recurrence writes itself", d: "cur[i] = max(a[i], cur[i-1] + a[i]). Read it in words: <b>start fresh, or carry the past forward</b>. And carrying is worth it exactly when cur[i-1] is positive, which is the same rule stated a second way." },
+    { t: "The table is one variable", d: "cur[i] reads only cur[i-1], and nothing ever looks further back, so the array of subproblems collapses to a single number. This is dynamic programming with the table thrown away, which is why the code has no table in it and does not look like DP." },
+    { t: "cur and best are different things", d: "cur is the block ending here and it can decay. best is the record and it never goes down. Keeping one variable for both is the most common bug on this page: you return a running total that has already shrunk past its peak." },
+    { t: "Seeding with zero is wrong, and quietly", d: "If every number is negative the best block is the single least-bad element, not the empty block. Initialise cur and best to <b>a[0]</b>, not to 0. Seeding with 0 passes every test that happens to contain a positive number, which is every test you will write by hand." },
+  ],
+
+  variants: [
+    { n: "Maximum sum", cost: "O(n) time, O(1) space",
+      idea: "The plain version. cur = max(a[i], cur + a[i]), best = max(best, cur).",
+      when: "Any \"largest contiguous total\" question, and the buy-and-sell-stock family, which is this run on the daily differences.",
+      watch: "Seed both variables with a[0]. Seeding with 0 breaks all-negative input and nothing else." },
+
+    { n: "With the indices", cost: "O(n) time, O(1) space",
+      idea: "Same loop, plus a start marker. The moment you choose to restart, that index becomes the new left edge; record left and right whenever best improves.",
+      when: "The problem wants the block itself, not just its total.",
+      watch: "Update the left edge at the restart, not when best improves. By then the restart has already happened and you record the wrong edge." },
+
+    { n: "Maximum product", cost: "O(n) time, O(1) space",
+      idea: "Track the running maximum AND the running minimum. A large negative times a new negative becomes the new maximum, so the smallest value has to be carried too.",
+      when: "The operation is multiplication, or anything else where a bad value can turn good.",
+      watch: "Compute both new values from the OLD pair. Overwriting hi before computing lo uses a value from the wrong step, and it will still pass small tests." },
+
+    { n: "Circular array", cost: "O(n) time, O(1) space",
+      idea: "The answer either wraps or it does not. The non-wrapping case is plain Kadane; the wrapping case is the total minus the <b>minimum</b> subarray, found by the same loop with the comparisons flipped.",
+      when: "The array is stated to be circular.",
+      watch: "If every number is negative, total minus the minimum block is the empty block, which is not allowed. Detect all-negative and return the plain answer." },
+
+    { n: "Two dimensions", cost: "O(rows² · cols)",
+      idea: "Fix a top row and a bottom row, collapse the rows between them into one array of column sums, and run Kadane on it. Every pair of row boundaries is tried.",
+      when: "Maximum sum rectangle in a matrix.",
+      watch: "Build the collapsed array incrementally as the bottom row moves down. Recomputing it from scratch adds a factor of rows for nothing." },
+  ],
+
+  viz: ["kadane"],
+
+  hing: `<p><b>Contiguous</b> lafz hi asli dikkat hai. Achhe numbers chun kar bure chhod nahi sakte, isliye "saare positive le lo" answer nahi hai. Har (start, end) try karo to <b>O(n²)</b>, aur ek block aur uske agle block mein 90 percent cheezein same hoti hain. Itna overlap ho to hamesha koi sasta tareeka hota hai.</p>
+<p><b>Sawaal badal do.</b> "Sabse achha block kahin bhi" mat poocho. Poocho <b>"sabse achha block jo theek index i par khatam hota hai"</b>. Har index ka sirf ek jawaab hai, to poore problem ke n jawaab hain. Aur jo block i par khatam hota hai, usme ya to i-1 hai ya nahi. Hai to = pichhla best + a[i]. Nahi hai to = sirf a[i]. <b>Do hi candidate</b>, bada wala le lo. Bas, algorithm khatam.</p>
+<p><b>Do variables alag rakho, yeh sabse badi galti hai.</b> <code>cur</code> woh block hai jo yahan khatam hota hai, aur woh <b>ghat sakta hai</b>. <code>best</code> record hai, woh kabhi neeche nahi jaata. Ek hi variable mein dono karoge to aakhir mein ghata hua total return kar doge.</p>
+<p><b>Aur zero se shuru mat karna.</b> Agar saare numbers negative hain, jawaab sabse kam bura ek element hai, khaali block nahi. <code>cur = best = a[0]</code> se shuru karo. Zero waala version har us test mein pass ho jaata hai jisme ek bhi positive number ho, matlab har test jo tum khud banaoge. Interview mein yeh edge case khud bol do, poochne se pehle.</p>`,
+
+  costs: [
+    ["Kadane, one pass", "O(n) time, O(1) space", "each index answers its own question from the previous one, so nothing is stored"],
+    ["brute force over every block", "O(n²)", "choose a start and an end, carrying a running sum so the inner loop stays O(1) per step"],
+    ["brute force, re-adding each block", "O(n³)", "the version people write first, and the one the constraints are set to reject"],
+    ["prefix sums plus a running minimum", "O(n) time, O(n) space", "the same answer as max over r of pre[r+1] minus the smallest earlier prefix, and it handles the empty block cleanly"],
+    ["recovering the indices", "O(n), no extra space", "one more variable for the left edge, updated at the restart rather than at the improvement"],
+    ["maximum product variant", "O(n) time, O(1) space", "two running values instead of one, because a negative can become the maximum"],
+    ["maximum rectangle in a matrix", "O(rows² · cols)", "every pair of row boundaries collapses to one array, and each collapsed array is one Kadane"],
+  ],
+
+  traps: [
+    "<b>Seeding cur and best with 0.</b> An all-negative array then answers 0, an empty block, which the problem did not allow. Seed with <code>a[0]</code> and start the loop at index 1.",
+    "<b>Using one variable for cur and best.</b> The running block decays after its peak, so returning it returns a number that was correct several indices ago.",
+    "<b>Updating best before cur.</b> The order in the loop is: recompute cur for this index, then compare it against best. Reversed, best is always one step stale.",
+    "<b>Recording the left edge when best improves.</b> The edge was set at the last restart, which may have been far earlier. Capture it there, and only copy it into the answer when best improves.",
+    "<b>Reaching for Kadane on a non-contiguous problem.</b> If elements may be skipped, this is not the algorithm; that is house robber, a different recurrence with the same shape.",
+    "<b>Overflow in fixed-width languages.</b> 10^5 elements near 10^9 each sum past 2^31. In Java and C++ the running total wants a 64-bit type, and the wrap is silent.",
+  ],
+
+  impl: [
+    ["Python", "max(x, cur + x)", "Integers are unbounded, so overflow never arises. cur = max(...) reads exactly like the recurrence, which is worth keeping."],
+    ["Java", "Math.max", "Math.max(int, int) returns int, so a long accumulator needs Math.max((long) a[i], cur + a[i]) or it truncates silently."],
+    ["C++", "std::max", "std::max needs both arguments of the same type. Mixing an int element with a long long accumulator is a compile error, which is the kind one to have."],
+    ["JavaScript", "Math.max", "Numbers are doubles, exact only to 2^53. Beyond that use BigInt, though no interview array will get you there."],
+  ],
+
+  code: {
+    pseudo: `# TWO VARIABLES. cur is the best block ENDING here; best is the record.
+cur  <- a[0]
+best <- a[0]                    # NOT 0: an all-negative array has no empty block
+for i from 1 to n-1:
+    cur  <- max(a[i], cur + a[i])       # start fresh here, or extend the past
+    best <- max(best, cur)              # best is separate, and never decreases
+return best
+
+# Read as DP:  dp[i] = max(a[i], dp[i-1] + a[i])
+# Only dp[i-1] is ever read, so the whole table collapses to one variable.
+
+# WANT THE BLOCK ITSELF? The restart IS the new left edge.
+start <- 0
+for i from 1 to n-1:
+    if cur + a[i] < a[i]:  cur <- a[i];  start <- i      # restart
+    else:                  cur <- cur + a[i]             # extend
+    if cur > best:         best <- cur;  L <- start;  R <- i
+
+# CIRCULAR: the wrapping answer is total - (the MINIMUM subarray).
+# Run Kadane twice, once for max and once for min, and guard the case where
+# every number is negative, because then "total - min" is the empty block.`,
+
+    py: `def max_subarray(a):                  # Kadane. O(n) time, O(1) space.
+    cur = best = a[0]                 # NOT 0: [-3, -1] must answer -1
+    for x in a[1:]:
+        cur = max(x, cur + x)         # restart here, or extend the last block
+        best = max(best, cur)         # tracked SEPARATELY: cur can decay
+    return best
+
+def max_subarray_indices(a):          # the same loop, plus bookkeeping
+    cur = best = a[0]
+    start = left = right = 0
+    for i in range(1, len(a)):
+        if cur + a[i] < a[i]:         # the restart is the new left edge,
+            cur, start = a[i], i      # so record it HERE, not on improvement
+        else:
+            cur += a[i]
+        if cur > best:
+            best, left, right = cur, start, i
+    return best, left, right
+
+# Buying and selling a stock once IS Kadane on the daily differences.
+def max_profit(prices):
+    cheapest, best = prices[0], 0     # 0 is right here: doing nothing is legal
+    for p in prices[1:]:
+        best = max(best, p - cheapest)      # sell today
+        cheapest = min(cheapest, p)         # or move the buy day forward
+    return best
+
+# CIRCULAR: max of (plain Kadane) and (total minus the minimum subarray).
+def max_circular(a):
+    total = sum(a)
+    best = worst = cur_hi = cur_lo = a[0]
+    for x in a[1:]:
+        cur_hi = max(x, cur_hi + x); best  = max(best, cur_hi)
+        cur_lo = min(x, cur_lo + x); worst = min(worst, cur_lo)
+    if best < 0: return best          # all negative: the wrap block is empty
+    return max(best, total - worst)`,
+
+    java: `int maxSubarray(int[] a) {
+    int cur = a[0], best = a[0];      // not 0, or an all-negative array breaks
+    for (int i = 1; i < a.length; i++) {
+        cur  = Math.max(a[i], cur + a[i]);
+        best = Math.max(best, cur);   // recompute cur FIRST, then compare
+    }
+    return best;
+}
+
+// OVERFLOW. 10^5 values near 10^9 sum past 2^31, and int wraps in silence.
+// If the constraints allow it, the accumulator must be long, and the cast
+// on the first argument is not optional: Math.max(int, int) returns int.
+long maxSubarrayLong(int[] a) {
+    long cur = a[0], best = a[0];
+    for (int i = 1; i < a.length; i++) {
+        cur  = Math.max((long) a[i], cur + a[i]);
+        best = Math.max(best, cur);
+    }
+    return best;
+}
+
+int maxProfit(int[] prices) {         // Kadane on the differences
+    int cheapest = prices[0], best = 0;
+    for (int p : prices) {
+        best = Math.max(best, p - cheapest);
+        cheapest = Math.min(cheapest, p);
+    }
+    return best;
+}`,
+
+    cpp: `int maxSubarray(vector<int>& a) {
+    int cur = a[0], best = a[0];
+    for (size_t i = 1; i < a.size(); i++) {
+        cur  = max(a[i], cur + a[i]);
+        best = max(best, cur);
+    }
+    return best;
+}
+
+// std::max requires both arguments to have the SAME type, so mixing an int
+// element with a long long accumulator will not compile. Say the type once.
+long long maxSubarrayLL(vector<int>& a) {
+    long long cur = a[0], best = a[0];
+    for (size_t i = 1; i < a.size(); i++) {
+        cur  = max<long long>(a[i], cur + a[i]);
+        best = max(best, cur);
+    }
+    return best;
+}
+
+// MAXIMUM PRODUCT: carry the minimum too, because a large negative times a
+// new negative is suddenly the maximum. Both new values read the OLD pair.
+int maxProduct(vector<int>& a) {
+    int hi = a[0], lo = a[0], best = a[0];
+    for (size_t i = 1; i < a.size(); i++) {
+        int x = a[i], prevHi = hi, prevLo = lo;
+        hi = max({x, prevHi * x, prevLo * x});
+        lo = min({x, prevHi * x, prevLo * x});
+        best = max(best, hi);
+    }
+    return best;
+}`,
+
+    js: `function maxSubarray(a) {
+  let cur = a[0], best = a[0];        // seeding with 0 breaks all-negative
+  for (let i = 1; i < a.length; i++) {
+    cur  = Math.max(a[i], cur + a[i]);
+    best = Math.max(best, cur);
+  }
+  return best;
+}
+
+// MAXIMUM PRODUCT needs two running values. Snapshot the old pair first:
+// overwriting hi before computing lo mixes values from different steps and
+// still passes every short test you will try by hand.
+function maxProduct(a) {
+  let hi = a[0], lo = a[0], best = a[0];
+  for (let i = 1; i < a.length; i++) {
+    const x = a[i], cands = [x, hi * x, lo * x];
+    hi = Math.max(...cands);
+    lo = Math.min(...cands);
+    best = Math.max(best, hi);
+  }
+  return best;
+}
+
+// The one-liner. Correct, O(n), and harder to debug at 2am than the loop.
+const kadane = (a) => a.slice(1).reduce(([cur, best], x) => {
+  const c = Math.max(x, cur + x);
+  return [c, Math.max(best, c)];
+}, [a[0], a[0]])[1];`,
+  },
+  codecap: "Two lines carry the whole algorithm; everything else on this page is the same two lines with something extra remembered. If you can only keep one thing, keep this: cur may decay, best may not, and they are never the same variable.",
+
+  q: [
+    ["Why does asking for \"the best block ending at index i\" make the problem easier?", "Because there is exactly one answer per index rather than n² across the array, and that answer depends only on the answer at i-1. It turns a search over pairs into a single scan."],
+    ["Why are two candidates enough at each index?", "A block that ends at i either contains i-1 or it does not. If it does, the best such block is the best block ending at i-1 plus a[i]. If it does not, it is a[i] alone. There is no third shape, so comparing two is exhaustive, not a heuristic."],
+    ["When is it worth carrying the previous block forward?", "Exactly when the previous running total is positive. A positive carry can only help; a negative carry is a cost that any fresh start avoids. That is why max(a[i], cur + a[i]) and \"reset when cur goes negative\" are the same rule."],
+    ["Why must cur and best be separate variables?", "cur is the best block ending at the current index and it shrinks whenever the numbers turn bad. best is a record of the highest cur ever reached. Merging them returns a total that has already decayed past its peak."],
+    ["What breaks if you initialise both to 0?", "An all-negative array returns 0, an empty block, which the problem does not permit. Seeding with a[0] fixes it. The bug survives every hand-written test, because those tests always happen to contain a positive number."],
+    ["Where is the dynamic programming, given there is no table?", "The recurrence dp[i] = max(a[i], dp[i-1] + a[i]) is the DP. Because dp[i] reads only dp[i-1] and nothing looks further back, the table collapses to one variable. It is the standard space reduction, applied so aggressively the table disappears."],
+    ["Why does maximum product need two running values instead of one?", "Multiplying by a negative swaps the order: the smallest running value becomes the largest. So the minimum has to be carried alongside the maximum, and both new values must be computed from the previous pair, not from each other."],
+  ],
+
+  p: [
+    [121, "best-time-to-buy-and-sell-stock", "Buy and Sell Stock, Kadane on the differences", "E"],
+    [53, "maximum-subarray", "Maximum Subarray, the archetype", "M"],
+    [1749, "maximum-absolute-sum-of-any-subarray", "Maximum Absolute Sum, run it twice", "M"],
+    [918, "maximum-sum-circular-subarray", "Circular, and the all-negative trap", "M"],
+    [152, "maximum-product-subarray", "Maximum Product, carry the minimum too", "M"],
+    [1567, "maximum-length-of-subarray-with-positive-product", "Positive Product, the same scan on sign", "M"],
+    [689, "maximum-sum-of-3-non-overlapping-subarrays", "Three blocks at once, prefix best from both ends", "H"],
   ],
 },
 
