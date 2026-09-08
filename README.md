@@ -10,6 +10,11 @@ Interview prep notes. Two ways in:
 - **Revision** (`revise.html`), every concept as the one line worth remembering, with its
   questions. Answer them out loud, then open them.
 
+- **Design Lab** (`design.html`), seven real systems worked end to end. Each architecture is
+  grown stage by stage, and a stage may only add a box if it can name the pressure that broke
+  the previous one. Click any box for why it exists, what lost the argument, what it costs and
+  how it fails.
+
 Plus the original sheets: DSA notes, a one-day sheet, the patterns roadmap, and LLD / HLD /
 HR one-pagers.
 
@@ -40,6 +45,7 @@ python3 -m http.server 8000
 | `dsa-sheet.html` | DSA one-day sheet |
 | `dsa-patterns.html` | Pattern roadmap + practice questions |
 | `dsa-data.js` | Shared DSA content |
+| `design.html` / `design-data.js` | Design Lab, worked HLD and LLD examples with stepped diagrams |
 | `lld.html` / `lld-data.js` | LLD notes (OOP, concurrency, patterns, machine coding) |
 | `hld.html` / `hld-data.js` | HLD notes (scalability, databases, caching, APIs) |
 | `hr.html` / `hr-data.js` | HR notes (STAR, why this company, salary, questions to ask) |

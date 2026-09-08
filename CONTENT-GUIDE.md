@@ -139,3 +139,59 @@ node --check concept-data.js && node --check viz.js
 Then open `concept.html?c=<id>` and confirm: nine sections render, every visual plays and
 nothing overflows its box, all five code tabs have content, and each answer is genuinely
 derivable from section 4.
+
+# Adding a Design Lab project
+
+Everything on `design.html` comes from one array in `design-data.js`. The schema is in the
+comment at the top of that file. These are the rules the schema does not tell you.
+
+## The rule that makes it teach
+
+**A stage may only add a box if it can name the pressure that broke the previous stage.**
+Stage 0 is always the version that genuinely works for about a day. Every stage after it
+has a `pressure` (what forced this), a `say` (the sentence you would use in the room) and a
+`breaks` (what fails next, which is the next stage's `pressure` seen from the other side).
+The last stage has no `breaks`. If you cannot write the `pressure`, the box has not earned
+its place, and the fix is to delete the box rather than to write vaguer prose.
+
+Six stages is the working size: fewer and the jumps are too big to follow, more and the
+diagrams stop changing enough between clicks to be worth stepping.
+
+## Every box carries its own reasoning
+
+A card without `alts`, `cons` and `fails` is a label, not a lesson. The three columns that
+do the teaching are **considered instead** (what lost the argument and why), **disadvantages**
+(say them, the design is not a sales pitch) and **how it fails** (the specific 3am story).
+`say` is optional and is the one sentence worth memorising for the interview.
+
+## Layout, and the one thing that will bite you
+
+Boxes sit on a grid of `{col, row}` and edges are routed with elbows. There is no clever
+router, so **an edge that spans two columns runs straight through whatever sits between
+them**. Keep every edge between adjacent columns, or between two rows of the same column
+with nothing in between. `check.js` fails the build with the crossing named, which is
+usually faster than reasoning about it.
+
+Two more layout facts. `bend` (0 to 1) moves the vertical part of an elbow inside the
+gutter, which is how several arrows leave the same box without stacking on one line. And an
+arrow label lives in the 72px gutter between two columns, so keep it under about twelve
+characters. The renderer places it on the run where it fits and stacks labels arriving at
+the same box, but it cannot make a long one narrow. There is a test for that too.
+
+## Roles, and the glyph each one draws
+
+`client, edge, svc, store, cache, queue, work, ext` for HLD, and
+`client, svc, entity, value, iface, impl, store` for LLD. The role picks the colour, the
+glyph in the corner of the box and the legend chip, so pick the one a reader would guess:
+a `store` is drawn as a database cylinder rather than a rectangle, `queue` gets a
+partitioned log, `cache` a lightning bolt, `ext` a dashed cloud, `iface` the UML lollipop.
+Adding a role means adding its glyph to `ICON`, its colour pair to the `.r-*` block, and
+its legend chip to `.lg-*`, all in `design.html`.
+
+## Before committing
+
+```bash
+node --check design-data.js && node check.js
+```
+
+Then open `design.html?p=<id>`, step every stage with the arrow keys, and click every box.

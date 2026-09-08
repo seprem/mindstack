@@ -120,7 +120,8 @@ const CONCEPTS = ctx.C, VIZ = ctx.V, DRAW = ctx.D;
 {
   const DASH = String.fromCharCode(0x2014);   // written this way so this file passes its own test
   const OURS = ["concept-data.js","viz.js","concept.html","revise.html","learn.css",
-                "CONTENT-GUIDE.md","README.md","index.html","ai.html","check.js"];
+                "CONTENT-GUIDE.md","README.md","index.html","ai.html","check.js",
+                "design.html","design-data.js"];
   const guilty = OURS.filter(f => fs.existsSync(P + f) && fs.readFileSync(P + f, "utf8").includes(DASH));
   test("house style", guilty.length === 0,
     "no em-dashes across " + OURS.length + " files" +
@@ -136,6 +137,91 @@ const CONCEPTS = ctx.C, VIZ = ctx.V, DRAW = ctx.D;
   let collisions = 0;
   ys.forEach((a, i) => ys.slice(i + 1).forEach(b => { if (Math.abs(a - b) < 14) collisions++; }));
   test("curve labels", collisions === 0, ys.length + " labels on the final frame, none overlapping");
+}
+
+/* ---------- 7. the Design Lab: shape, geometry, and labels that fit ----------
+   The diagrams are laid out on a grid and routed with elbows, so an edge that
+   spans two columns runs straight through whatever sits between them. There is
+   no clever router; there is this test instead. */
+const DESIGN = (() => {
+  const d = {}; vm.createContext(d);
+  vm.runInContext(fs.readFileSync(P + "design-data.js", "utf8") + "\n;globalThis.D=DESIGN;", d);
+  return d.D;
+})();
+{
+  const BW = 178, BH = 88, CG = 72, RG = 44, PAD = 22;
+  const X = c => PAD + c * (BW + CG), Y = r => PAD + r * (BH + RG);
+  const problems = [];
+  let stages = 0, nodes = 0, edges = 0;
+
+  for (const p of DESIGN) {
+    const FIELDS = ["id","kind","n","sub","one","brief","stagesIntro","stages",
+                    "boxesIntro","boxes","flowsIntro","flows","tradeoffsIntro",
+                    "tradeoffs","next","p"];
+    FIELDS.filter(f => !(f in p)).forEach(f => problems.push(p.id + " missing " + f));
+    p.boxes.forEach(b => ["n","r","job","why","forced","alts","pros","cons","cost","fails"]
+      .filter(f => !(f in b)).forEach(f => problems.push(p.id + "/" + b.id + " missing " + f)));
+    if (p.stages.length < 5) problems.push(p.id + " has only " + p.stages.length + " stages");
+    if (p.boxes.length < 8)  problems.push(p.id + " has only " + p.boxes.length + " components");
+
+    // every box on a stage has a card, and every card appears on a stage
+    const cards = new Set(p.boxes.map(b => b.id)), onStage = new Set();
+    p.stages.forEach(st => st.nodes.forEach(n => onStage.add(n.id)));
+    [...onStage].filter(n => !cards.has(n)).forEach(n => problems.push(p.id + ": node " + n + " has no card"));
+    [...cards].filter(c => !onStage.has(c)).forEach(c => problems.push(p.id + ": card " + c + " is on no stage"));
+
+    p.stages.forEach((st, si) => {
+      stages++; nodes += st.nodes.length; edges += (st.edges || []).length;
+      const by = {}, cells = {};
+      st.nodes.forEach(n => {
+        by[n.id] = n;
+        const k = n.col + "," + n.row;
+        if (cells[k]) problems.push(p.id + " s" + si + ": " + cells[k] + " and " + n.id + " share a cell");
+        cells[k] = n.id;
+        if (n.s && n.s.length > 26) problems.push(p.id + " s" + si + ': sub label too long, "' + n.s + '"');
+      });
+      (st.add || []).forEach(a => { if (!by[a]) problems.push(p.id + " s" + si + ": add lists " + a); });
+      (st.edges || []).forEach(e => {
+        const a = by[e.a], b = by[e.b];
+        if (!a || !b) { problems.push(p.id + " s" + si + ": edge " + e.a + " to " + e.b); return; }
+        // Edge labels sit centred in the gutter between two columns, so however
+        // the bend moves them they still have to fit without landing on a box.
+        if (e.l && b.col > a.col) {
+          // The renderer places a label on the longest run it has, and its
+          // worst case is the full gutter, so that is the width to fit inside.
+          const gap = X(b.col) - (X(a.col) + BW);
+          if (e.l.length * 5.25 > gap - 8)
+            problems.push(p.id + " s" + si + ': edge label too wide for its gutter, "' + e.l + '"');
+        }
+        const ax = X(a.col), ay = Y(a.row), bx = X(b.col), by2 = Y(b.row);
+        const acx = ax + BW / 2, acy = ay + BH / 2, bcx = bx + BW / 2, bcy = by2 + BH / 2;
+        let segs;
+        if (b.col > a.col) {
+          if (a.row === b.row) segs = [[ax + BW, acy, bx, acy]];
+          else { const mx = (ax + BW) + (bx - (ax + BW)) * (e.bend != null ? e.bend : 0.5);
+                 segs = [[ax + BW, acy, mx, acy], [mx, acy, mx, bcy], [mx, bcy, bx, bcy]]; }
+        } else if (b.col === a.col) {
+          segs = b.row > a.row ? [[acx, ay + BH, acx, by2]] : [[acx, ay, acx, by2 + BH]];
+        } else {
+          const lane = Math.max(ay, by2) + BH + 26;
+          segs = [[acx, ay + BH, acx, lane], [acx, lane, bcx, lane], [bcx, lane, bcx, by2 + BH]];
+        }
+        for (const n of st.nodes) {
+          if (n.id === a.id || n.id === b.id) continue;
+          const nx = X(n.col), ny = Y(n.row);
+          for (const [x1, y1, x2, y2] of segs) {
+            const sx = Math.min(x1, x2), ex = Math.max(x1, x2);
+            const sy = Math.min(y1, y2), ey = Math.max(y1, y2);
+            if (ex > nx + 3 && sx < nx + BW - 3 && ey > ny + 3 && sy < ny + BH - 3)
+              problems.push(p.id + " s" + si + ": edge " + e.a + " to " + e.b + " crosses " + n.id);
+          }
+        }
+      });
+    });
+  }
+  test("design data", problems.length === 0,
+    DESIGN.length + " projects, " + stages + " stages, " + nodes + " boxes, " + edges + " arrows, none crossing" +
+    (problems.length ? "   <-- " + problems.slice(0, 3).join("; ") : ""));
 }
 
 /* ---------- 7. the DOM checks, if jsdom happens to be available ---------- */
@@ -186,6 +272,45 @@ if (!JSDOM) {
   test("concept pages", problems.length === 0,
     CONCEPTS.length + " pages render, all sections present" +
     (problems.length ? "   <-- " + problems.slice(0,3).join("; ") : ""));
+
+  {
+    const problems = [];
+    for (const proj of DESIGN) {
+      const { d, w, errs } = render("design.html", "design.html?p=" + proj.id);
+      if (errs.length) { problems.push(proj.id + ": " + errs[0]); continue; }
+      const n = s => d.querySelectorAll(s).length;
+      const want = 6 + ((proj.api || proj.schema) ? 1 : 0) + (proj.deep ? 1 : 0) + (proj.patterns ? 1 : 0);
+      if (n("h2.pat") !== want) problems.push(proj.id + ": " + n("h2.pat") + " sections, expected " + want);
+      if (n(".comp") !== proj.boxes.length + (proj.patterns || []).length)
+        problems.push(proj.id + ": " + n(".comp") + " cards");
+      if (n("#projNav a") !== DESIGN.length) problems.push(proj.id + ": sidebar out of step");
+      if (n("input[type=checkbox]")) problems.push(proj.id + ": progress tracking is back");
+      const dots = [...d.querySelectorAll(".dots button")];
+      if (dots.length !== proj.stages.length) problems.push(proj.id + ": " + dots.length + " stage buttons");
+      dots.forEach((btn, i) => {
+        btn.dispatchEvent(new w.Event("click"));
+        const stage = d.querySelector(".stagesvg");
+        if (!stage.querySelector("svg")) problems.push(proj.id + " s" + i + ": no diagram");
+        if (/NaN|undefined/.test(stage.innerHTML)) problems.push(proj.id + " s" + i + ": broken diagram");
+        // every box must open its reasoning, or the diagram is decoration
+        stage.querySelectorAll(".dnode").forEach(g => {
+          g.dispatchEvent(new w.Event("click"));
+          const h = d.querySelector(".pick h5");
+          if (!h || !h.textContent.trim()) problems.push(proj.id + ": " + g.dataset.id + " opens nothing");
+          g.dispatchEvent(new w.Event("click"));
+        });
+      });
+      d.querySelectorAll(".note, .comp dd:not(.alts), .flow li").forEach(host =>
+        host.querySelectorAll("b, i, em, code").forEach(e => {
+          const disp = w.getComputedStyle(e).display;
+          if (disp && disp !== "inline" && disp !== "inline-block")
+            problems.push(proj.id + ": <" + e.tagName.toLowerCase() + "> renders as " + disp);
+        }));
+    }
+    test("design pages", problems.length === 0,
+      DESIGN.length + " pages render, every stage draws, every box opens" +
+      (problems.length ? "   <-- " + problems.slice(0, 3).join("; ") : ""));
+  }
 
   const { d, w, errs } = render("revise.html", "revise.html");
   const entries = d.querySelectorAll(".entry").length;
