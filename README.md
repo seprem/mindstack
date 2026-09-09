@@ -48,7 +48,7 @@ python3 -m http.server 8000
 | `design.html` / `design-data.js` | Design Lab, worked HLD and LLD examples with stepped diagrams |
 | `lld.html` / `lld-data.js` | LLD notes (OOP, concurrency, patterns, machine coding) |
 | `hld.html` / `hld-data.js` | HLD notes (scalability, databases, caching, APIs) |
-| `hr.html` / `hr-data.js` | HR notes (STAR, why this company, salary, questions to ask) |
+| `hr.html` / `hr-data.js` | HR + manager notes (STAR / CAR / HERO, résumé stories, why company / leave, salary) |
 | `ai.html` | AI, not written yet |
 | `study.html`, `dsa-cheatsheet.html`, `dsa.html` | Redirects to the pages above |
 

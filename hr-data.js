@@ -5,7 +5,7 @@ const HR = [
 
   { n: "Overview", h: "HR is not small talk. They test if you can work with people, stay, and be hired without drama. Same bar as DSA: short, specific, practiced out loud.", c: [
     { n: "What this round is for",
-      note: "Recruiter / HR / hiring manager behavioral. They decide: <b>can we work with you</b>, <b>will you join and stay</b>, <b>are your stories real</b>. Technical rounds prove skill. This round proves judgment, ownership, and communication.<br>Typical 20–40 min: intro → walk résumé → why us / why leave → 2–3 STAR stories → salary / notice → your questions.<br>India product companies + FAANG-style loops all use the same skeleton. Amazon names it Leadership Principles; everyone else just asks the same questions without the poster.",
+      note: "Two flavors, same stories, different length.<br><b>HR / recruiter:</b> can we work with you, will you join and stay, are your stories real. Typical 20–40 min: intro → walk résumé → why us / why leave → 2–3 stories → salary / notice → your questions. Use <b>STAR</b> (full) or <b>HERO</b> if they only give you 45 seconds.<br><b>Hiring manager:</b> can you own a messy problem, make a trade-off, and ship. They interrupt. Use <b>CAR</b> (tight) or <b>HERO</b> (headline first). If they say “go deeper,” expand Action like STAR.<br>Technical rounds prove skill. These rounds prove judgment, ownership, and communication. India product + FAANG-style loops use the same skeleton. Amazon names it Leadership Principles; everyone else asks the same questions without the poster.",
       p: [
         ["GFG", "https://www.geeksforgeeks.org/hr-interview-questions/", "GFG — HR interview questions", "E"],
         ["GFG", "https://www.geeksforgeeks.org/blogs/star-interview-method/", "GFG — STAR method", "E"],
@@ -16,37 +16,226 @@ const HR = [
       ]},
     { n: "Prep in one sitting",
       h: "Write 8 stories once. Reuse them. Do not invent a new novel per question.",
-      note: "Build a <b>story bank</b> (8 cards, half a page each, STAR):<br>1. Biggest impact / metric you own.<br>2. Hard bug or production incident.<br>3. Disagreement with a teammate or manager — then you committed.<br>4. Missed deadline or failed idea — what you changed after.<br>5. Helped someone / mentored / unblocked the team.<br>6. Ambiguous problem, you scoped it.<br>7. Tight deadline, you cut scope and shipped.<br>8. You were wrong, took feedback.<br>Map each card to 2–3 question types (conflict, ownership, failure, leadership). Practice <b>90-second tell-me-about-yourself</b> and <b>why this company</b> until they sound like you, not a blog.",
+      note: "Build a <b>story bank</b> (8 cards). Write each once as STAR, then squeeze it into CAR and HERO — same facts, different length. Your cards:<br>1. Biggest impact / metric you own.<br>2. Hard bug or production incident.<br>3. Disagreement with a teammate or manager — then you committed.<br>4. Missed deadline or failed idea — what you changed after.<br>5. Helped someone / mentored / unblocked the team.<br>6. Ambiguous problem, you scoped it.<br>7. Tight deadline, you cut scope and shipped.<br>8. You were wrong, took feedback.<br>Map each card to 2–3 question types. Practice <b>90-second tell-me-about-yourself</b> and <b>why this company</b> until they sound like you, not a blog. Open <b>Your stories</b> on this sheet — those cards are already filled from your résumé.",
       p: [
         ["HI", "https://www.hellointerview.com/learn/system-design/in-a-hurry/delivery", "Hello Interview — how you deliver under questions", "E"],
         ["EDU", "https://www.educative.io/blog/crack-amazon-behavioral-interview-questions", "Educative — Amazon behavioral", "M"],
       ]},
     { n: "Map of this sheet",
-      note: "<pre style='font-size:.8rem;line-height:1.45;overflow:auto'>HR\n├── STAR — how every story is built\n├── Pitch — tell me about yourself\n├── Why this company\n├── Why leaving\n├── Salary negotiation\n├── Questions you ask them\n├── Say / don't say\n├── Behavioral bank — conflict, failure, weakness…\n└── Offer, notice, joining</pre>" },
+      note: "<pre style='font-size:.8rem;line-height:1.45;overflow:auto'>HR\n├── STAR · CAR · HERO — pick by round\n├── Your stories — résumé cards, 3 formats\n├── Pitch — tell me about yourself\n├── Why this company\n├── Why leaving\n├── Salary negotiation\n├── Questions you ask them\n├── Say / don't say\n├── Behavioral bank — conflict, failure, weakness…\n└── Offer, notice, joining</pre>" },
   ]},
 
-  { n: "STAR", h: "Situation 10% · Task 10% · Action 60–70% · Result 10–20%. Interviewers grade Action + Result. Vague 'we did a lot' fails.", c: [
-    { n: "The four beats",
-      note: "<b>S — Situation</b> (1–2 sentences): company, team, time, stakes. Not a history of the org.<br><b>T — Task</b>: what <i>you</i> were on the hook for. One sentence.<br><b>A — Action</b>: what <i>you</i> did, in order. Decisions, trade-offs, how you unblocked. Use “I”. If the team did it, say what <i>your</i> piece was.<br><b>R — Result</b>: number if you have one (latency, $ cost, hours, incidents, adoption). Then <b>one lesson</b> — what you'd repeat or change.<br>Optional <b>L (STAR-L)</b>: “Next time I would …” — this is what senior interviewers wait for on failure questions.",
-      code:
-`S  Last quarter our IoT ingest jobs were blowing Databricks budget.
-T  I owned finding why and cutting cost without dropping SLAs.
-A  I pulled job metrics, found shuffle-heavy joins, added partition
-   pruning + a cheaper warehouse for backfills, and gated the change
-   behind a canary region.
-R  ~$200K/year saved, same freshness. I'd profile cost before adding
-   another cluster next time — not after finance pings.`,
+  { n: "STAR · CAR · HERO", h: "Same facts. Three lengths. HR wants STAR. Manager wants CAR. Anyone short on time wants HERO (headline first).", c: [
+    { n: "Which round — pick one",
+      note: "<b>HR / recruiter</b> → <b>STAR</b>. They don't know the stack. Give Situation + Task so the story is human, then Action + Result. 90s–2 min.<br><b>Hiring manager / skip-level</b> → <b>CAR</b>. They already skimmed the résumé. Skip the org chart. Challenge → what you did → number. 45–75s. If they say “walk me through it,” add Situation like STAR.<br><b>Either, if they look impatient or you have 40 seconds</b> → <b>HERO</b>. Hook first (the number), then Example, Result, Ownership. Managers remember the hook.<br>Never mix frameworks mid-sentence. Never change the numbers. If they probe, only expand Action.",
       p: [
-        ["GFG", "https://www.geeksforgeeks.org/blogs/star-interview-method/", "How to use STAR", "E"],
+        ["GFG", "https://www.geeksforgeeks.org/blogs/star-interview-method/", "GFG — STAR method", "E"],
         ["AMZN", "https://www.aboutamazon.com/news/workplace/amazon-interview-guide", "Amazon: be specific, use I, use numbers", "M"],
+        ["EXP", "https://www.tryexponent.com/blog/how-to-nail-amazons-behavioral-interview-questions", "Exponent — how they probe", "M"],
       ]},
+    { n: "STAR — HR default",
+      note: "<b>S — Situation</b> (1–2 sentences): company, team, stakes. Not a history of the org.<br><b>T — Task</b>: what <i>you</i> were on the hook for. One sentence.<br><b>A — Action</b> (60–70%): what <i>you</i> did, in order. Decisions, trade-offs, how you unblocked. Use “I”.<br><b>R — Result</b>: a number, then one lesson.<br>Optional <b>L (STAR-L)</b> on failure: “Next time I would …” — senior interviewers wait for this.",
+      code:
+`S  At Smartsheet, multi-task streaming jobs were running on
+   all-purpose clusters across US, EU, and AU. Compute was high
+   and finance had started asking.
+T  I owned finding a cut that would not drop freshness SLAs.
+A  I compared all-purpose vs job-cluster cost per task, moved
+   the streaming jobs to job clusters, rolled US first as a
+   canary, then EU and AU. I watched lag and failure rate
+   after each region.
+R  $200K+ a year saved, same freshness. Next time I would
+   cost-profile the cluster type before the first deploy —
+   not after finance pings.` },
+    { n: "CAR — manager default",
+      note: "<b>C — Challenge</b>: the hard thing in one line (constraint, risk, or broken state).<br><b>A — Action</b>: 3–5 verbs. What you decided, what you cut, what you measured.<br><b>R — Result</b>: number + whether it held.<br>No Task line — Challenge already implies what you owned. If the manager asks “what was your role?”, add one sentence and keep going. This is the format for “tell me about your most impactful project” and “how do you handle on-call.”",
+      code:
+`C  Streaming jobs on all-purpose clusters were burning
+   Databricks budget across three regions.
+A  I moved them to job clusters, canaried US, then EU and AU,
+   and watched lag plus failures after each cutover.
+R  $200K+/year off compute, SLAs held.` },
+    { n: "HERO — headline first",
+      note: "<b>H — Hook</b>: one sentence they can repeat in the debrief (“he cut $200K on Databricks”).<br><b>E — Example</b>: 3–4 sentences of what happened. This is your Action, compressed.<br><b>R — Result</b>: the same number, plus a second metric if you have one (failures, lag, tickets).<br><b>O — Ownership</b>: what was yours vs the team's, and what you'd do next. This is what a manager writes down as “owns outcomes.”<br>Use HERO when they say “give me the short version,” at the start of a panel, or when HR asks “what's your biggest achievement” and you can feel the clock.",
+      code:
+`H  I cut about $200K a year of Databricks spend without
+   dropping pipeline SLAs.
+E  Jobs were on all-purpose clusters in US, EU, and AU. I
+   moved multi-task streaming jobs to job clusters, shipped
+   US first, then the other two regions.
+R  Cost down $200K+/year. Freshness stayed flat.
+O  I owned the migration and the rollback bar. Next time I
+   would pick job clusters on day one and keep all-purpose
+   only for interactive work.` },
+    { n: "Same story, three ways",
+      note: "Practice this out loud. Same CDC story — HR hears STAR, manager hears CAR, short slot hears HERO. Do not invent extra plot.",
+      code:
+`STAR (HR)
+S  We landed binlog CDC from 82 sharded Aurora Postgres and
+   MySQL databases into Delta. Onboarding a shard meant
+   writing ~19 configs by hand.
+T  I had to make shard onboarding cheap without breaking
+   the 282 streaming jobs.
+A  I built a registry expander: one entry generates the
+   job set from 34 templates. Path was Flink → Kinesis →
+   Delta. I kept the streaming jobs on a shared pattern
+   so a new shard was a row, not a rewrite.
+R  876 jobs / 1,547 tasks. Onboarding went from ~19 configs
+   to 1. I would have built the registry before the 20th
+   shard, not after.
+
+CAR (manager)
+C  82 Aurora shards; each new shard needed ~19 hand-written
+   configs, so CDC could not scale.
+A  I added a registry expander on 34 templates and kept the
+   path Flink → Kinesis → Delta.
+R  876 jobs / 1,547 tasks, 282 streaming. Shard onboarding
+   is one registry row.
+
+HERO (short)
+H  I made CDC onboarding one row instead of ~19 configs.
+E  82 Aurora shards were each a snowflake. I wrote a
+   registry expander over 34 templates, same Flink →
+   Kinesis → Delta path.
+R  876 jobs / 1,547 tasks; 282 always on.
+O  I owned the expander and the onboarding contract. I
+   would have shipped the registry before shard 20.` },
     { n: "Time and follow-ups",
-      note: "Target <b>90 seconds–2 minutes</b> per story. Recruiter: shorter. Bar-raiser / HM: they will interrupt with “what did <i>you</i> do?”, “what was the alternative?”, “how did you measure?”, “what would you do differently?”.<br>If they cut you, jump to Action. If they go silent, stop after Result — don't keep talking.<br><b>Never</b> reuse the exact same 2-minute story in every round of one loop. Same bank, different angle (conflict vs metric vs failure).",
+      note: "STAR: <b>90 seconds–2 minutes</b>. CAR: <b>45–75 seconds</b>. HERO: <b>30–45 seconds</b>, then stop.<br>They will interrupt with “what did <i>you</i> do?”, “what was the alternative?”, “how did you measure?”, “what would you do differently?”.<br>If they cut you, jump to Action (or Example). If they go silent, stop after Result — don't keep talking.<br><b>Never</b> reuse the exact same 2-minute story in every round of one loop. Same bank, different framework and angle (conflict vs metric vs failure).",
       p: [
         ["EXP", "https://www.tryexponent.com/blog/how-to-nail-amazons-behavioral-interview-questions", "How interviewers probe STAR", "M"],
       ]},
-    { n: "What a bad STAR sounds like",
-      note: "<b>Too much S:</b> five minutes of org chart, no action.<br><b>We-we-we:</b> interviewer can't hire a team; they hire you.<br><b>No result:</b> “it went well.” Ask yourself: what moved? time, money, reliability, people.<br><b>Hero fiction:</b> if you can't survive “who else was in the room?”, don't tell it.<br><b>No conflict:</b> a smooth story with no trade-off is forgettable. Put the hard part in Action." },
+    { n: "What a bad answer sounds like",
+      note: "<b>Too much S:</b> five minutes of org chart, no action.<br><b>We-we-we:</b> interviewer can't hire a team; they hire you.<br><b>No result:</b> “it went well.” Ask: time, money, reliability, people.<br><b>Hero fiction:</b> if you can't survive “who else was in the room?”, don't tell it.<br><b>No conflict:</b> a smooth story with no trade-off is forgettable.<br><b>Wrong framework:</b> STAR-dumping a manager who asked for 30 seconds. Or CAR-ing HR so hard they never hear you work with humans." },
+  ]},
+
+  { n: "Your stories", h: "Résumé cards. Learn the numbers once. HR = STAR. Manager = CAR. Short slot = HERO. Say them out loud.", c: [
+    { n: "How to use this bank",
+      note: "Six stories cover almost every “tell me about a time.” Pick by label:<br>• <b>Impact / cost</b> — Databricks $200K<br>• <b>Scale / platform</b> — 1,045 jobs, 11 sources<br>• <b>Zero-to-one</b> — OPC-UA after Greengrass failed<br>• <b>Latency</b> — KEDA, minutes → 10–20s; Vestas 1–2s API<br>• <b>Reliability / on-call</b> — 40 tickets → single digits<br>• <b>Stretch / leadership</b> — one week vs two-month contract team<br>If they ask conflict or failure and you don't have a separate card, tell Databricks or OPC-UA and put the disagreement or miss in Action. Don't invent a fake fight." },
+    { n: "1. Databricks $200K — impact",
+      note: "Use for: biggest achievement, cost, ownership, “why should we hire you.”",
+      code:
+`STAR  Smartsheet streaming jobs sat on all-purpose clusters
+      in US, EU, AU. I owned a cost cut that kept SLAs. I
+      moved multi-task jobs to job clusters, canaried US,
+      then EU and AU. $200K+/year saved, freshness held.
+
+CAR   Challenge: all-purpose clusters were too expensive
+      for always-on streams. Action: job clusters, region
+      canary, watch lag. Result: $200K+/year, SLAs held.
+
+HERO  Hook: I took $200K/year off Databricks without
+      dropping SLAs. Example: all-purpose → job clusters,
+      three regions. Result: cost down, freshness flat.
+      Ownership: I owned cutover and rollback.` },
+    { n: "2. Ingestion platform — scale",
+      note: "Use for: walk me through your work, distributed systems, “what's the biggest thing you ran.”",
+      code:
+`STAR  Smartsheet had legacy Snowflake pipelines and 11
+      sources across US, EU, AU. I re-architected them as
+      a config-driven Databricks framework — MySQL CDC,
+      DynamoDB, Kinesis, Salesforce, NetSuite, Stripe —
+      plus a Snowflake → Delta backfill. Deployed with
+      Databricks Asset Bundles. 1,045 jobs / 2,756 tasks
+      (backfill 42 / 287). That's the platform I operate.
+
+CAR   Challenge: 11 sources, 3 regions, snowflake-by-
+      snowflake jobs. Action: config-driven Databricks
+      bundles + Snowflake→Delta backfill. Result: 1,045
+      jobs / 2,756 tasks in production.
+
+HERO  Hook: I run 1,045 ingestion jobs across three
+      regions. Example: 11 sources onto Databricks, DAB
+      deploys, Snowflake backfill. Result: 2,756 tasks
+      in prod. Ownership: framework + on-call on it.` },
+    { n: "3. OPC-UA from scratch — zero to one",
+      note: "Use for: ambiguity, “tell me about a time a plan failed,” startup-like execution, manager “what do you do when the POC dies.”",
+      code:
+`STAR  At Vestas, an AWS Greengrass POC could not give us
+      reliable turbine telemetry. I owned a replacement.
+      I wrote an async OPC-UA collector — node tree,
+      encryption, local buffer when the link or MSK was
+      down — and streamed to MSK on 22 partitions. About
+      10k points/sec. Data availability went up ~96%.
+
+CAR   Challenge: Greengrass POC failed; we still needed
+      farm telemetry. Action: built OPC-UA→MSK from
+      scratch with local buffering. Result: ~10k points/sec,
+      availability +96%.
+
+HERO  Hook: I replaced a failed Greengrass POC with a
+      pipeline we still run. Example: OPC-UA collector,
+      22 Kafka partitions, buffer on outage. Result:
+      ~10k/sec, +96% availability. Ownership: design
+      through production.` },
+    { n: "4. KEDA + Vestas API — latency",
+      note: "Use for: performance, “how do you make something faster,” real-time systems (good for Cartesia-style serving talk).",
+      code:
+`STAR  A Databricks stream from Kafka to Delta was taking
+      minutes. I rebuilt it as a Docker service, MSK →
+      Kinesis, KEDA on Kafka lag. Delta lag dropped to
+      10–20 seconds. Separately I built the turbine-status
+      API on DynamoDB for ~19k turbines — 1–2s lag — and
+      a cursor-paginated file API on DocumentDB + S3.
+
+CAR   Challenge: ingest lag in minutes, operators needed
+      live turbine state. Action: KEDA-scaled MSK→Kinesis
+      path + DynamoDB status API. Result: 10–20s Delta;
+      1–2s status for ~19k turbines.
+
+HERO  Hook: I took farm ingest from minutes to 10–20
+      seconds and serve turbine status in 1–2s. Example:
+      KEDA on Kafka lag; DynamoDB API. Result: those
+      two numbers in prod. Ownership: service + API.` },
+    { n: "5. On-call to single digits — reliability",
+      note: "Use for: production incident, toil, “how do you handle on-call,” helping other teams.",
+      code:
+`STAR  Ingestion on-call was ~40 tickets and daily job
+      failures. I hardened the legacy Airbyte → S3 →
+      Airflow → Snowflake path, then wrote onboarding
+      docs and a self-serve access dashboard for
+      Snowflake, Databricks, AWS, and Jenkins so other
+      teams stopped paging us for keys. Tickets went to
+      single digits. Daily failures dropped ~34%.
+
+CAR   Challenge: ~40 on-call tickets and noisy daily
+      failures. Action: harden legacy ingest + self-serve
+      access. Result: single-digit tickets, ~34% fewer
+      failures.
+
+HERO  Hook: I took on-call from ~40 tickets to single
+      digits. Example: fix the failure-heavy path, then
+      remove access toil with a dashboard. Result: ~34%
+      fewer daily failures. Ownership: reliability +
+      the access tool.` },
+    { n: "6. One week vs two months — stretch",
+      note: "Use for: leadership without title, deadline, “tell me about a time you went above your role,” why Smartsheet kudos exist. Stay humble — you unblocked, you didn't “save the company.”",
+      code:
+`STAR  A contract team had been on a project for two
+      months and it was still stuck. I picked it up as
+      stretch work, scoped the must-haves, and shipped
+      in a week. My manager called it out publicly;
+      CTO, Chief AI Officer, SVP, and senior ICs also
+      recognized that stretch (about an extra quarter
+      of scope). I treat that as “scope it, cut it,
+      finish it” — not as a hero story.
+
+CAR   Challenge: two months in, the contract work was
+      not landing. Action: I took the must-haves and
+      shipped in one week. Result: delivered; public
+      kudos from EM and execs.
+
+HERO  Hook: I shipped in one week what had been open
+      for two months. Example: cut to must-haves, own
+      the finish line. Result: it landed; leadership
+      noticed. Ownership: I asked for the stretch; I
+      don't wait to be assigned the messy one.` },
+    { n: "Bonus lines if they keep going",
+      note: "<b>ML / platform:</b> automated accuracy-based model registration to S3 (MLflow) — saved ~12 hrs/week, tests to 95%.<br><b>Observability:</b> CloudWatch → Kinesis → OpenSearch, 45–50 TB/day, 50–100 streams, 1,000+ shards, sub-second search.<br><b>Hackathon:</b> usage analytics that show which product capabilities a customer actually needs — retention/expansion pitch.<br>Don't lead with these unless they ask ML, logs, or “anything else.” The six cards above are enough.",
+      code:
+`OpenSearch  45–50 TB/day logs, sub-second search.
+MLflow      Model register to S3, ~12 hrs/week back.
+Hackathon   Usage → which features a customer needs.` },
   ]},
 
   { n: "Tell me about yourself", h: "90 seconds. Present → past → future. Not your life story. End on why you are excited about *this* role.", c: [
@@ -158,16 +347,20 @@ I'm happy to sign once we land that.` },
       note: "Blank on a story: “Let me pick a concrete one — two seconds.” Then STAR, even if small.<br>Wrong fact: “I misspoke. The number was X, not Y.”<br>Illegal / awkward (age, marriage, plans for kids — still happens): short redirect. “I can relocate / I can do the office policy we discussed. On the work itself …” You don't have to overshare.<br>They bash a competitor: don't pile on. “I haven't worked there. I'm here because of your problem space.”" },
   ]},
 
-  { n: "Behavioral bank", h: "Same 8 stories, different question labels. Lead with the match ('this is a conflict story'), then STAR.", c: [
+  { n: "Behavioral bank", h: "Same 8 stories, different question labels. Lead with the match ('this is a conflict story'), then STAR for HR or CAR for a manager.", c: [
     { n: "Conflict / disagreement",
-      note: "They want: you didn't explode, you didn't silently comply, you used data, you committed after the decision. Never end on “and I was right, they were dumb.” End on the outcome and the relationship.",
+      note: "They want: you didn't explode, you didn't silently comply, you used data, you committed after the decision. Never end on “and I was right, they were dumb.” End on the outcome and the relationship. Pull numbers from <b>Your stories</b> if this sample doesn't match how the meeting actually went.",
       code:
-`S  PM wanted to ship a backfill that would have doubled cluster cost.
-T  I owned the pipeline SLAs and the budget.
-A  I showed one-week cost vs freshness, proposed a cheaper warehouse
-   + weekend window. We disagreed in the doc, then aligned.
-R  Shipped on the original date, cost stayed flat. Working relation
-   with that PM is fine — we reuse the same cost table now.` },
+`STAR  A backfill was scoped in a way that would have kept
+      jobs on expensive clusters and blown the budget I
+      owned. I showed one-week cost vs freshness, argued
+      for job clusters + a weekend window, we disagreed
+      in the doc, then aligned. Shipped on the original
+      date; later this became the $200K/year cut.
+
+CAR   Challenge: backfill vs budget. Action: cost table,
+      cheaper path, commit after the decision. Result:
+      date held, spend didn't spike.` },
     { n: "Failure / mistake / incident",
       note: "Pick a real miss you owned, not “I work too hard.” Show detection, mitigation, RCA, and the guardrail you added (alert, test, runbook). Blame-the-vendor stories score low.",
       p: [
