@@ -10,7 +10,7 @@ Interview prep notes. Two ways in:
 - **Revision** (`revise.html`), every concept as the one line worth remembering, with its
   questions. Answer them out loud, then open them.
 
-- **Design Lab** (`design.html`), seven real systems worked end to end. Each architecture is
+- **Design Lab** (`design.html`), nine real systems worked end to end. Each architecture is
   grown stage by stage, and a stage may only add a box if it can name the pressure that broke
   the previous one. Click any box for why it exists, what lost the argument, what it costs and
   how it fails.

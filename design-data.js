@@ -3376,7 +3376,7 @@ const DESIGN = [
       cons: ["It puts a Redis round trip on every request, including the ones that will be allowed. That is the price of a shared limit and it should be stated.", "Redis becoming unavailable is a policy question with no good default: fail open and the limit disappears, fail closed and Redis takes the whole site down."],
       cost: "One Redis round trip per request, sub millisecond on a local network.",
       fails: "Redis is unreachable. The design has to have already decided which way to fail, and for a rate limiter the answer is almost always open, with an alert, because a rate limiter protecting a healthy system should never be the reason that system is down.",
-      say: "Fail open, loudly. A rate limiter is a guard rail, and a guard rail that closes the road when it breaks is worse than no guard rail." },
+      say: "Fail open, loudly. A rate limiter is a guard rail, and a guard rail that closes the road when it breaks is worse than no guard rail. The library behind this box is designed on its own page, <a href='?p=ratelimiter-lld'>Rate limiter</a>, and it currently fails closed, which is the first thing I would change about it." },
 
     { id: "redis", n: "Redis", r: "store",
       job: "Hold one bucket per client, and run the check and decrement as one indivisible operation.",
@@ -3578,6 +3578,415 @@ const DESIGN = [
     ["GFG", "https://www.geeksforgeeks.org/system-design/load-balancing-algorithms/", "Load balancing algorithms compared", "E"],
     ["GFG", "https://www.geeksforgeeks.org/system-design/rate-limiting-system-design/", "Rate limiting, the algorithms and the trade-offs", "M"],
     ["HI", "https://www.hellointerview.com/learn/system-design/core-concepts/networking-essentials", "Hello Interview, load balancers and proxies", "M"]
+  ]
+},
+
+/* ==========================================================================
+   9. LLD: RATE LIMITER LIBRARY
+   ========================================================================== */
+{
+  id: "ratelimiter-lld", kind: "lld", n: "Rate limiter", sub: "Go library, Redis and Lua",
+  tags: ["atomicity", "two algorithms", "lazy refill", "library design", "shipped code"],
+  one: "Rate limiting is a read, a decision and a write over state that several processes share. Do those three things from your own process and you have a race; the entire library exists to move all three inside Redis, where they become one operation.",
+
+  brief: {
+    why: "This is the smallest project on the page, under five hundred lines, and it has the highest ratio of decision to code. Almost none of it is the algorithms, which are twenty lines of Lua each. The interesting parts are why the logic runs on the database rather than in the caller, how a bucket refills without anything ever refilling it, why one line of the sliding window script would silently undercount without a UUID in it, and what a library owes the program that imports it. It is also a good place to notice that a library has users who cannot see inside it, so every decision it makes quietly on their behalf is one they cannot make themselves.",
+    functional: [
+      "<b>Decide</b> whether a given key may make a request right now, in one call.",
+      "<b>Token bucket</b>: tokens accrue at a fixed rate up to a burst ceiling, and a request spends some. Short bursts allowed, long term average enforced.",
+      "<b>Sliding window</b>: at most N requests in any trailing window of time, with no boundary spike.",
+      "<b>Work across processes.</b> Ten copies of the caller must share one budget, not get ten budgets.",
+      "<b>Cost nothing when idle.</b> A key nobody has used should stop existing without anything sweeping it up."
+    ],
+    out: ["HTTP middleware", "per route or per plan configuration", "distributed quota borrowing", "leaky bucket and fixed window", "metrics and observability"],
+    nfr: [
+      ["Atomicity", "check and decrement are one operation", "This is the requirement. Everything else in the design follows from it, and it is the reason the algorithms live in Redis rather than in Go."],
+      ["Correct across processes", "N callers, one budget", "A limiter that is only correct in one process is not a limiter, it is a suggestion. This is why the state is remote at all."],
+      ["Latency", "one round trip per decision", "The limiter runs before every request it guards, so its cost is added to everything. One round trip is the floor and the design should not exceed it."],
+      ["Behaviour when Redis is down", "a decision, not an accident", "Fail open and the limit vanishes. Fail closed and Redis takes the whole service down. Either is defensible; silently choosing one for your caller is not."],
+      ["Idle cost", "zero", "Every key carries a TTL derived from its own parameters, so inactive clients expire themselves and nothing has to run a cleanup job."]
+    ],
+    numbers: [
+      ["Token bucket state", "two fields, about 100 bytes", "A hash holding tokens and a timestamp. Constant per key no matter how much traffic that key makes, which is the bucket's headline advantage."],
+      ["Sliding window state", "one member per request in the window", "A sorted set entry is a nanosecond timestamp plus a UUID, so roughly 80 bytes each. At a limit of 100 requests that is about 8 KB per key."],
+      ["The memory ratio", "about 80 to 1", "Per key, per algorithm. At a million active clients that is 100 MB against 8 GB, which is the difference between a Redis instance and a Redis budget conversation."],
+      ["Token bucket TTL", "ceil(burst / rate) seconds", "Exactly the time an empty bucket takes to refill completely. After that the stored state is indistinguishable from a fresh key, so expiring it loses nothing. This derivation is the nicest line in the codebase."],
+      ["Sliding window TTL", "the window length", "After one window with no requests, every entry would have been evicted anyway. Same reasoning, different unit."],
+      ["Round trips per decision", "one", "The whole point of the script. A read then a write from Go would be two round trips and a race between them."],
+      ["Script bytes on the wire", "about 600, every single call", "Because the script is sent by value rather than by hash. Sending the 40 byte SHA instead is a one line change and it applies to every request the service ever serves."]
+    ],
+    numbersNote: "Two rows carry the design. <b>80 to 1</b> is the real reason to pick between the algorithms, and it is a memory argument rather than a correctness one. <b>ceil(burst / rate)</b> is the TTL derived from the parameters themselves, which is what makes idle keys free without a sweeper."
+  },
+
+  stagesIntro: "Six stages. The first two are wrong in ways that are worth feeling, the third is the idea the library exists for, the next two are the two algorithms and their one subtle line each, and the last is the difference between code that works and a library somebody else can rely on.",
+
+  stages: [
+    { t: "0. A counter in a variable",
+      pressure: "Nothing yet. This is what everybody writes first and it is wrong twice over, which is a good ratio for four lines of code.",
+      nodes: [
+        { id: "caller", l: "Caller", s: "one process", col: 0, row: 0, r: "client" },
+        { id: "api", l: "Limiter", s: "map of key to count", col: 1, row: 0, r: "svc" }
+      ],
+      edges: [{ a: "caller", b: "api", l: "allowed?" }],
+      add: ["caller", "api"],
+      say: "A map from key to a count, incremented on each request, reset on a timer. It works in a test and it is wrong twice. It is wrong per process, so two copies of the service give every client twice the limit. And the increment is a read and a write from several goroutines, so it needs a mutex before it is even correct locally.",
+      breaks: "Both problems have the same shape: state that several things share, changed by a read followed by a write. Adding a mutex fixes it inside one process and does nothing across two." },
+
+    { t: "1. Move the counter somewhere shared",
+      pressure: "Several processes, one budget. The state has to leave the process, and the obvious destination is Redis with an increment and an expiry.",
+      nodes: [
+        { id: "caller", l: "Caller", s: "many processes", col: 0, row: 1, r: "client" },
+        { id: "api", l: "Limiter", s: "INCR, then EXPIRE", col: 1, row: 1, r: "svc" },
+        { id: "redis", l: "Redis", s: "one counter per key", col: 3, row: 1, r: "store" }
+      ],
+      edges: [
+        { a: "caller", b: "api", l: "allowed?" },
+        { a: "api", b: "redis", l: "INCR" }
+      ],
+      add: ["redis"],
+      say: "A key per client per window, incremented and given a TTL. Every process now shares one number, which fixes the important half of the problem, and INCR is itself atomic so the counter cannot be lost. This is a fixed window counter and it is a completely reasonable thing to ship.",
+      breaks: "Two things. A fixed window allows a double burst across its boundary: the full limit at 59.9 seconds and the full limit again at 60.1. And the moment the rule needs anything more than an increment, a refill, a comparison against a stored timestamp, a count of what is still inside a window, it becomes read, decide, write. Three steps from Go, with a gap between each pair, and two processes can both read the same value and both decide yes." },
+
+    { t: "2. Put the decision where the data is",
+      pressure: "Read, decide, write has to be one indivisible step. It cannot be, from the outside, over a network, from several processes at once.",
+      nodes: [
+        { id: "caller", l: "Caller", col: 0, row: 1, r: "client" },
+        { id: "api", l: "RateLimiter", s: "sends key and args", col: 1, row: 1, r: "svc" },
+        { id: "tb", l: "Token bucket Lua", s: "runs inside Redis", col: 2, row: 1, r: "impl" },
+        { id: "redis", l: "Redis", s: "single threaded", col: 3, row: 1, r: "store" },
+        { id: "hash", l: "Bucket hash", s: "tokens, timestamp", col: 4, row: 0, r: "value" }
+      ],
+      edges: [
+        { a: "caller", b: "api", l: "allowed?" },
+        { a: "api", b: "tb", l: "EVAL" },
+        { a: "tb", b: "redis", l: "runs on" },
+        { a: "redis", b: "hash", l: "holds" }
+      ],
+      add: ["tb", "hash"],
+      say: "The whole algorithm moves into a Lua script that Redis runs on your behalf. Redis executes a script as one unit, so the read, the arithmetic, the comparison and the write cannot be interleaved with anybody else's. The race is not made unlikely, it is made impossible, and no lock exists anywhere. Note what this costs the caller: nothing. One round trip, same as the increment, and now the logic can be arbitrarily complicated.",
+      breaks: "The bucket has to refill over time, and nothing is running to refill it. The obvious answer, a background job that tops up every bucket on a tick, would mean a process whose work grows with the number of clients, doing nothing useful for the vast majority of them." },
+
+    { t: "3. The bucket that fills itself",
+      pressure: "Refill is a function of elapsed time, and the only moment anybody cares about the token count is when a request arrives. So compute it then, from the stored timestamp, and never run anything in the background at all.",
+      nodes: [
+        { id: "caller", l: "Caller", col: 0, row: 1, r: "client" },
+        { id: "api", l: "RateLimiter", s: "rate, burst", col: 1, row: 1, r: "svc" },
+        { id: "tb", l: "Token bucket Lua", s: "lazy refill on read", col: 2, row: 1, r: "impl" },
+        { id: "redis", l: "Redis", s: "single threaded", col: 3, row: 1, r: "store" },
+        { id: "hash", l: "Bucket hash", s: "tokens, timestamp, TTL", col: 4, row: 0, r: "value" }
+      ],
+      edges: [
+        { a: "caller", b: "api", l: "allowed?" },
+        { a: "api", b: "tb", l: "EVAL" },
+        { a: "tb", b: "redis", l: "runs on" },
+        { a: "redis", b: "hash", l: "holds" }
+      ],
+      add: [],
+      say: "Read the stored token count and the time it was stored, add rate times elapsed, cap at burst, and write it back with the new timestamp. The bucket is always exactly as full as it should be at the instant somebody asks, and it is never touched otherwise. And the TTL is derived from the parameters rather than picked: an empty bucket refills completely in burst over rate seconds, so after that long a stored bucket is indistinguishable from a fresh one and deleting it loses nothing. That is why an idle client costs zero and nothing has to sweep.",
+      breaks: "A bucket smooths bursts by design, which is exactly wrong when the requirement is a hard cap: no more than a hundred calls per minute, ever, including in the first second." },
+
+    { t: "4. A window that actually slides",
+      pressure: "A different requirement needs a different structure. Counting per fixed window allows a double burst at the boundary, and a bucket is deliberately permissive about bursts, so neither answers a strict cap.",
+      nodes: [
+        { id: "caller", l: "Caller", col: 0, row: 1, r: "client" },
+        { id: "api", l: "RateLimiter", s: "two constructors", col: 1, row: 1, r: "svc" },
+        { id: "tb", l: "Token bucket Lua", s: "hash, O(1)", col: 2, row: 1, r: "impl" },
+        { id: "sw", l: "Sliding window Lua", s: "sorted set, O(n)", col: 2, row: 2, r: "impl" },
+        { id: "redis", l: "Redis", s: "single threaded", col: 3, row: 1, r: "store" },
+        { id: "hash", l: "Bucket hash", s: "tokens, timestamp", col: 4, row: 0, r: "value" },
+        { id: "zset", l: "Window sorted set", s: "one member per request", col: 4, row: 2, r: "value" }
+      ],
+      edges: [
+        { a: "caller", b: "api", l: "allowed?" },
+        { a: "api", b: "tb", l: "EVAL" },
+        { a: "api", b: "sw", l: "or EVAL", bend: 0.8 },
+        { a: "tb", b: "redis", l: "runs on" },
+        { a: "sw", b: "redis", bend: 0.8 },
+        { a: "redis", b: "hash", l: "holds", bend: 0.8 },
+        { a: "redis", b: "zset", l: "or holds", bend: 0.8 }
+      ],
+      add: ["sw", "zset"],
+      say: "A sorted set of request timestamps. Evict everything older than the window, count what is left, and if that is under the limit, add this request. Three commands, one script, atomic. The subtle line is the member: it is the timestamp <i>plus a UUID</i>, because a sorted set is a set, and two requests landing on the same nanosecond with the same member would collapse into one entry and quietly undercount. The price of exactness is memory proportional to the limit rather than constant, which is the real trade-off between the two algorithms.",
+      breaks: "Both scripts are handed the current time by the caller, from the caller's own clock. With one process that is fine. With ten processes it is ten clocks, and they do not agree." },
+
+    { t: "5. The clock, and what a library owes its caller",
+      pressure: "Two problems that are both about the boundary. The time comes from outside and cannot be trusted to agree between processes, and the answer goes outside as a single bit that throws away everything the script knew.",
+      nodes: [
+        { id: "caller", l: "Caller", s: "middleware, handler", col: 0, row: 1, r: "client" },
+        { id: "tests", l: "miniredis tests", s: "a clock you control", col: 0, row: 3, r: "work" },
+        { id: "api", l: "RateLimiter", s: "returns a bool today", col: 1, row: 1, r: "svc" },
+        { id: "clock", l: "Clock", s: "caller's, not Redis's", col: 2, row: 0, r: "ext" },
+        { id: "tb", l: "Token bucket Lua", s: "hash, O(1)", col: 2, row: 1, r: "impl" },
+        { id: "sw", l: "Sliding window Lua", s: "sorted set, O(n)", col: 2, row: 2, r: "impl" },
+        { id: "redis", l: "Redis", s: "single threaded", col: 3, row: 1, r: "store" },
+        { id: "hash", l: "Bucket hash", s: "tokens, timestamp", col: 4, row: 0, r: "value" },
+        { id: "zset", l: "Window sorted set", s: "one member per request", col: 4, row: 2, r: "value" }
+      ],
+      edges: [
+        { a: "caller", b: "api", l: "allowed?" },
+        { a: "tests", b: "api", l: "FastForward", bend: 0.8 },
+        { a: "api", b: "clock", l: "time.Now", bend: 0.8 },
+        { a: "api", b: "tb", l: "EVAL" },
+        { a: "api", b: "sw", l: "or EVAL", bend: 0.8 },
+        { a: "tb", b: "redis", l: "runs on" },
+        { a: "sw", b: "redis", bend: 0.8 },
+        { a: "redis", b: "hash", l: "holds", bend: 0.8 },
+        { a: "redis", b: "zset", l: "or holds", bend: 0.8 }
+      ],
+      add: ["clock", "tests"],
+      say: "The clock is drawn as an external box on purpose, because that is what it is: a value produced outside the atomic region and trusted inside it. Redis can supply the time itself, which makes one clock for every caller and removes the skew entirely. And the return value is where a library either helps or does not: this one answers yes or no, so a caller cannot say how long to wait, cannot tell a rate limit apart from a Redis outage, and cannot choose to fail open. The script already knows all three. The tests are on the diagram because they solved the hardest part of testing this well: a time based algorithm is only testable if you can move time, and miniredis lets you." }
+  ],
+
+  boxesIntro: "Nine components for under five hundred lines, which tells you where the density is. The two Lua scripts are the design; everything else exists to get arguments to them and an answer back.",
+
+  boxes: [
+    { id: "caller", n: "The caller", r: "client",
+      job: "Asks whether a key may proceed, and does something sensible with the answer.",
+      why: "It is drawn because a library's boundary is a design decision, and this one gives the caller less than it could. What crosses this line is the whole subject of the last stage.",
+      forced: "Stage 0, and its shape became a question in stage 5.",
+      alts: [["Shipping HTTP middleware in the library", "convenient and it forces a web framework on everybody who wants a rate limiter. Keeping the core framework free and offering middleware as a separate package is the better split."]],
+      pros: ["The library knows nothing about HTTP, so it works for queue consumers, gRPC handlers and background jobs equally.", "One call, one boolean, nothing to learn."],
+      cons: ["A boolean cannot express how long to wait, so the caller cannot send a Retry-After header and clients retry blindly.", "It cannot tell a rate limit apart from a Redis failure, so the caller cannot choose to fail open even if it wants to.", "The key is a bare string, so two features in one program can collide on a key without either noticing."],
+      cost: "One function call and one Redis round trip per guarded request.",
+      fails: "A caller wraps every HTTP handler in this and Redis becomes unreachable. Every request is denied, and the service is down because of the thing that was meant to protect it. The caller never got the chance to decide otherwise.",
+      say: "A rate limiter should hand back a decision, not a bit: allowed, how many remain, how long until the next one, and whether the backend answered at all. All three are already known inside the script and thrown away at the boundary." },
+
+    { id: "api", n: "RateLimiter", r: "svc",
+      job: "Hold the parameters, put the arguments in the right order, evaluate the script, and turn the reply into an answer.",
+      why: "It is the facade. The caller should never assemble Lua arguments by hand, and the script should never know what a Go type is.",
+      forced: "Stage 0, and it acquired a second algorithm in stage 4.",
+      alts: [["Two separate types, TokenBucket and SlidingWindow", "the better shape, and the reason is in the disadvantages below. One type with two constructors means half its fields are meaningless at any given moment."], ["An interface with two implementations", "the same as two types plus the ability to swap them at runtime, which the load balancer that uses this library actually wants, since it picks the algorithm from configuration."], ["Free functions taking a config struct", "no state to hold at all, and it means passing the parameters on every call, which is more error prone than holding them."]],
+      pros: ["The two algorithms are interchangeable at the call site, which is exactly what a caller choosing by configuration needs.", "Parameters are captured once at construction, so a call site cannot drift from a different one.", "The Redis client is passed in rather than owned, so the library never manages a connection it did not create."],
+      cons: ["One struct carries four fields and each constructor fills two of them, so calling the sliding window method on a token bucket instance compiles, runs, and denies everything, because the window and the limit are both zero.", "Errors are printed to standard output and converted to a false. A library should never write to the caller's output, and it should never decide the caller's failure policy.", "The two methods have different signatures, one taking a requested count and one not, so they are not actually interchangeable through an interface without change."],
+      cost: "One small struct. The work is entirely in the round trip.",
+      fails: "Somebody builds a token bucket, later switches a config flag, and calls the sliding window path on it. Window zero and limit zero means the count is never below the limit, so every request is denied, silently, with no error anywhere. Two types make that unrepresentable at compile time.",
+      say: "Two types rather than one struct with two disjoint halves, a shared interface over them, and a return value that carries an error. Those three changes are maybe forty lines and they are the difference between working code and a library." },
+
+    { id: "tb", n: "Token bucket script", r: "impl",
+      job: "Refill the bucket for the time that has passed, spend the requested tokens if there are enough, and store the result.",
+      why: "It is the algorithm for a limit that should tolerate bursts. Tokens accrue whether you use them or not, so a quiet client banks capacity and can spend it quickly later, which is how real clients behave.",
+      forced: "Stage 2 for the script, stage 3 for the lazy refill.",
+      alts: [["A background job topping up every bucket on a tick", "the intuitive reading of the algorithm, and it does work proportional to the number of clients rather than the number of requests, almost all of it wasted."], ["Leaky bucket", "smooths output rather than input, so it queues rather than rejects. A different product decision, and it needs somewhere to queue."], ["Storing tokens as an integer count of thousandths", "worth doing. Tokens are stored as a float in a hash field, so repeated tiny refills accumulate floating point error over a long lived key. Integers would remove that entirely, and the argument is the same one as never storing money in a float."]],
+      pros: ["Constant memory per key, two fields, no matter the traffic.", "Refill is arithmetic on a stored timestamp, so nothing runs in the background and nothing has to be scheduled.", "The TTL falls out of the parameters, so idle keys expire exactly when their state becomes meaningless.", "A missing key reads as a full bucket, so a first request and an expired one take the same path with no special case."],
+      cons: ["It permits a burst by design, so it cannot express a hard cap.", "The token count is a float in a string field, which is precision you do not need and cannot audit.", "Requesting more tokens than the burst size can never succeed, and the caller is told no with no hint that the request was impossible rather than merely early."],
+      cost: "One hash read, a little arithmetic, one hash write and an expiry. Microseconds inside Redis.",
+      fails: "A caller sets burst to 5 and asks for 10 tokens. The answer is no, forever, and looks identical to being rate limited. Validate at construction, or return a distinguishable reason.",
+      say: "Lazy refill is the trick worth remembering: never schedule work to update state that nobody is looking at. Compute it from a timestamp at the moment somebody asks." },
+
+    { id: "sw", n: "Sliding window script", r: "impl",
+      job: "Drop everything older than the window, count what remains, and admit the request only if that count is under the limit.",
+      why: "It is the algorithm for a hard cap. Unlike a fixed window it has no boundary to burst across, because the window moves with the request rather than with the clock.",
+      forced: "Stage 4.",
+      alts: [["Fixed window counters", "one integer and an expiry, and it allows twice the limit across a boundary: the full quota at the end of one window and again at the start of the next."], ["Sliding window log with approximation", "keep the previous window's count and weight it by how far into the current one you are. Constant memory, small error, and the usual production choice at scale. Worth naming as where this goes if the memory hurts."], ["A bucket with burst set to the limit", "close in effect and not the same guarantee, because a bucket refills continuously and a window does not."]],
+      pros: ["Exact. At most N requests in any trailing window, with no boundary effect and no approximation.", "Eviction is a range delete by score, which Redis does in one command.", "The whole state is inspectable: you can list the actual request times, which is useful when somebody disputes a limit."],
+      cons: ["Memory is proportional to the limit, one member per request in the window, so a high limit is an expensive key.", "The busiest clients cost the most memory, which is precisely backwards from what you want when defending against them.", "Every member carries a UUID, so the storage is dominated by identifiers rather than by data."],
+      cost: "About 80 bytes per request in the window. At a limit of 100 that is 8 KB per key, against 100 bytes for a bucket.",
+      fails: "Without the UUID in the member, two requests arriving in the same nanosecond write the same member, the sorted set keeps one, and the count is short by one. Under real concurrency that is a limiter that admits more than it should, occasionally, in a way no test would catch. The UUID is what makes each request its own member.",
+      say: "A sorted set is a set, so the member has to be unique per request or identical timestamps collapse. That one detail is the difference between an exact limiter and one that leaks under load." },
+
+    { id: "redis", n: "Redis", r: "store",
+      job: "Hold the state, and run the script over it without letting anything else interleave.",
+      why: "Two properties are needed at once: state several processes can see, and a place where a read and a write can be one operation. Redis with a script is the shortest path to both.",
+      forced: "Stage 1 for the sharing, stage 2 for the atomicity.",
+      alts: [["A relational database with a transaction", "correct, and it makes every request a transaction against durable storage, which is orders of magnitude more expensive for state that is disposable."], ["An in memory limiter per process", "no network and no shared budget, so N processes give N times the limit."], ["A dedicated rate limiting service", "what you build at very large scale, with local budgets leased from a central authority. Vastly more machinery, and worth naming as the next step."]],
+      pros: ["Single threaded command execution, so a script is atomic without any locking anywhere.", "TTLs are native, so expiry needs no sweeper and no bookkeeping.", "Sub millisecond, which is the only reason it is acceptable in front of every request."],
+      cons: ["A network dependency on the hot path of everything the limiter guards.", "A long script blocks every other client, because the thing that makes it atomic is that nothing else runs. These two are short; a script that iterated over a large key set would be a production incident.", "State is not durable, so a failover resets every bucket."],
+      cost: "One round trip and one script evaluation per decision.",
+      fails: "Redis fails over and every bucket is lost. Every client is granted a full bucket at once, which is a brief window of roughly double the intended rate. That is an acceptable failure for a limiter and worth saying out loud, because it is the argument for not paying for synchronous replication here.",
+      say: "The reason a script is atomic is that Redis is single threaded, which is also the reason a script must stay short. Both halves of that sentence matter." },
+
+    { id: "hash", n: "The bucket state", r: "value",
+      job: "Two fields: how many tokens were left, and when that was true.",
+      why: "It is the smallest state that supports lazy refill. From those two numbers and the current time, the correct token count is a subtraction and a multiplication.",
+      forced: "Stage 2.",
+      alts: [["Storing a token count alone, with a background refiller", "one field instead of two, and it needs a process to keep it honest."], ["A stream or list of grants", "auditable and it is the sliding window's memory profile with none of its exactness."]],
+      pros: ["Constant size regardless of traffic.", "A hash of two small fields is compactly encoded by Redis, so it really is about a hundred bytes.", "An absent key means a full bucket, which makes first use and expiry the same code path."],
+      cons: ["The token count is stored as a float rendered into a string, so it is neither exact nor cheap to parse.", "The timestamp is whatever the caller's clock said, so the state carries somebody else's idea of when now was."],
+      cost: "About 100 bytes per active key, expiring by itself.",
+      fails: "Two callers with clocks a few seconds apart write timestamps out of order. The refill computation clamps elapsed time at zero, so the bucket simply does not refill for a while, and the client is limited harder than configured with nothing in any log to explain it.",
+      say: "Storing thousandths of a token as an integer would make this exact, and it is the same reasoning as never storing money in a float. The float here is smaller in consequence and identical in kind." },
+
+    { id: "zset", n: "The window state", r: "value",
+      job: "One member per request that is still inside the window, scored by its timestamp.",
+      why: "Exactness needs the individual events. A count cannot tell you which requests are about to fall out of the window; a set of timestamps can.",
+      forced: "Stage 4.",
+      alts: [["A count plus the oldest timestamp", "constant memory and it cannot know when the second oldest expires, so it can only approximate."], ["Two counters, the current and the previous window, weighted", "the standard approximation. Constant memory, error of a few percent, and what most large systems actually run."]],
+      pros: ["Range delete by score evicts the expired entries in one command.", "The count is a single O(1) command once the eviction has happened.", "It is inspectable, so the exact request times behind a decision can be read out."],
+      cons: ["Memory grows with the limit and the traffic, so the heaviest users are the most expensive to track.", "The member is dominated by a UUID, so most of the stored bytes are there to guarantee uniqueness rather than to carry information."],
+      cost: "Roughly 80 bytes per in window request. 8 KB per key at a limit of 100.",
+      fails: "A key is created with an enormous limit and a long window, and the sorted set grows into the megabytes. The eviction command then has real work to do inside an atomic script, which blocks every other Redis client while it runs. Cap the limit, or switch to the weighted approximation above some size.",
+      say: "A shorter unique member, a counter rather than a UUID, would cut this key's memory by half and keep the exactness. The UUID is the easy correct answer, not the cheap one." },
+
+    { id: "clock", n: "The clock", r: "ext",
+      job: "Say what time it is now, for both algorithms.",
+      why: "It is drawn as an external, untrusted box because that is exactly what it is. The value is produced outside the atomic region, by whichever process happened to handle the request, and then trusted completely inside it.",
+      forced: "Stage 5, and it is the design's most interesting weakness.",
+      alts: [["Redis TIME, called inside the script", "one clock for every caller, so skew disappears entirely. It was historically awkward because a non deterministic command made a script unsafe to replicate verbatim, and modern Redis replicates a script's effects rather than its source, which removes the objection."], ["Requiring NTP on every caller", "not a design, a hope. Skew of tens of milliseconds is normal and occasionally it is seconds."]],
+      pros: ["Passing the time in keeps the script deterministic, which is the older and more conservative choice.", "It makes the algorithm trivially testable, because a test can pass any time it likes."],
+      cons: ["Several callers means several clocks and no agreement between them.", "A caller with a fast clock writes a future timestamp into the bucket, and every caller with a correct clock then computes zero elapsed time and applies no refill until the real clock catches up.", "For the sliding window a skewed now shifts the whole window, so a client can be limited by requests that, according to that process, have not happened yet."],
+      cost: "Nothing, and it is the difference between correct and approximately correct across a fleet.",
+      fails: "One instance in an autoscaling group comes up with a clock two seconds ahead. Its writes poison the buckets of every client it serves for the next two seconds of their timeline, and the symptom is clients being limited harder than configured, intermittently, on some instances only. This is a genuinely miserable bug to find from the outside.",
+      say: "Take the time from Redis inside the script. One clock, no skew, and the determinism objection stopped applying several major versions ago." },
+
+    { id: "tests", n: "The tests", r: "work",
+      job: "Run both algorithms against an in process Redis, and move time forwards on demand.",
+      why: "A time based algorithm cannot be tested honestly without control of the clock. Waiting a real second in a test is slow and flaky; fast forwarding a fake one is neither.",
+      forced: "Stage 5, and it is the part of this repository that most deserves copying.",
+      alts: [["Testing against a real Redis in a container", "higher fidelity, including the real Lua interpreter, and it needs infrastructure to run the test suite. A good candidate for a second, slower suite rather than the only one."], ["Mocking the Redis client", "fast and it tests nothing, since the entire algorithm lives in the script that the mock would be standing in for."], ["Sleeping in the test", "the version everybody writes first: slow, flaky, and it gets deleted after it fails on a loaded build machine."]],
+      pros: ["No infrastructure, so the suite runs anywhere in a second.", "Fast forwarding time makes refill and expiry ordinary assertions rather than acts of patience.", "The tests exercise the real Lua rather than a Go reimplementation of it, so the thing under test is the thing that ships."],
+      cons: ["The in process Redis uses a different Lua implementation from the real one, so a script can pass here and behave differently in production. Rare, and worth knowing.", "It does not exercise the concurrency the scripts exist to handle, because a single test goroutine never races itself."],
+      cost: "One dependency, test only.",
+      fails: "A script relies on a Redis or Lua behaviour the in process version implements slightly differently, and the difference is discovered in production. Run the same suite against a real Redis in continuous integration as well, which is a configuration change rather than new tests.",
+      say: "Controlling time is what makes a time based algorithm testable. If the only way to test a refill is to wait for it, the design has a seam missing." }
+  ],
+
+  patternsIntro: "A library this small has room for about three decisions. Two of them are patterns worth naming, one is a pattern that was correctly refused, and two more are shapes this code should probably have and does not.",
+
+  patterns: [
+    { n: "The algorithm as data, executed at the store", used: true,
+      what: "The whole decision is a constant string of Lua, sent to Redis and run there.",
+      varies: "Nothing about it varies. It exists so that a read, a decision and a write become one operation with nothing able to interleave.",
+      without: "Read from Go, decide in Go, write from Go. Two round trips, and a window between them in which another process does the same thing and reaches the same wrong conclusion.",
+      cost: "The logic now lives in a second language, with no type checking, no test coverage tooling and no debugger. That is a real price and it buys the only property that matters here." },
+    { n: "Strategy, two algorithms behind one type", used: true,
+      what: "Token bucket and sliding window, chosen by which constructor you call, with the same call shape after that.",
+      varies: "The limiting algorithm. The caller picks by configuration, which is exactly how the load balancer that imports this uses it.",
+      without: "The caller reaches for one algorithm's implementation directly and cannot change its mind without changing code.",
+      cost: "Here it was implemented as one struct holding both parameter sets, so half the fields are meaningless at any moment and a mismatched call silently denies everything. The pattern is right; this shape of it is the design's weakest point." },
+    { n: "A background refiller for the bucket", used: false,
+      what: "A ticker that adds tokens to every bucket on a schedule, which is how the algorithm is usually described.",
+      varies: "Nothing, and it would be a process whose work grows with the number of clients rather than the number of requests.",
+      without: "Compute the refill from a stored timestamp at the moment somebody asks. The bucket is correct whenever it is observed and untouched otherwise.",
+      cost: "None. Refusing this is the best decision in the codebase, and the general lesson travels: do not schedule work to maintain state nobody is currently looking at." },
+    { n: "Separate types per algorithm", used: false,
+      what: "A TokenBucket type and a SlidingWindow type, each holding only its own parameters, behind a shared interface.",
+      varies: "Nothing new. It removes a whole class of error rather than enabling anything.",
+      without: "One struct with four fields where two are always zero, so calling the wrong method compiles and returns a plausible, wrong answer forever.",
+      cost: "One extra type and an interface, maybe forty lines. This is the change I would make first, and it is listed as rejected only because the code has not made it yet." },
+    { n: "A result type instead of a boolean", used: false,
+      what: "Return allowed, remaining, retry after and an error, rather than one bit.",
+      varies: "What the caller wants to do. Send a Retry-After header, log the near misses, fail open when the backend is unreachable.",
+      without: "The caller cannot distinguish denied from broken, and cannot tell a client when to come back. The script computed both and the boundary threw them away.",
+      cost: "A struct and an error in the signature, which is a breaking change to a published API. Worth a major version, and the second change I would make." }
+  ],
+
+  flowsIntro: "Two decisions, one per algorithm. Both are a single round trip, and everything interesting happens inside Redis in the middle step.",
+
+  flows: [
+    { n: "A token bucket decision",
+      note: "Everything between the first and last step happens inside one atomic script.",
+      steps: [
+        ["The caller asks whether a key may spend some tokens. The library reads the current time from the local clock and evaluates the script with the key, the rate, the burst, that time and the amount requested.", "sync"],
+        ["Inside Redis: read the stored token count and timestamp. A missing key reads as a full bucket, so first use needs no special case.", "sync"],
+        ["Compute elapsed time since the stored timestamp, clamped at zero, add rate times elapsed to the tokens, and cap the result at the burst size.", "sync"],
+        ["If there are fewer tokens than requested, return zero and write nothing. A denial leaves no trace, which is why a denied client cannot exhaust anything.", "sync"],
+        ["Otherwise subtract, write both fields back, and set the expiry to the time a full refill would take. Return one.", "sync"],
+        ["Back in Go the reply becomes true or false, and everything else the script knew is discarded.", "sync"]
+      ] },
+    { n: "A sliding window decision",
+      steps: [
+        ["The library builds a member for this request: the current time in nanoseconds joined to a fresh UUID, because a sorted set member has to be unique or two requests at the same instant become one.", "sync"],
+        ["Inside Redis: remove every member scored older than now minus the window. This is the sliding part, and it happens on read rather than on a timer.", "sync"],
+        ["Count what is left, which is now exactly the number of requests inside the trailing window.", "sync"],
+        ["If the count is below the limit, add this request's member and refresh the key's expiry to the window length. Return one.", "sync"],
+        ["Otherwise return zero without adding, so a rejected request does not extend the window it was rejected by. That detail matters: recording denials would let a client keep itself limited forever.", "sync"]
+      ] },
+    { n: "When Redis does not answer",
+      note: "The path worth arguing about, and the one the library currently decides for you.",
+      steps: [
+        ["The evaluation returns an error, from a timeout, a failover or an unreachable host.", "sync"],
+        ["The library prints the error to standard output. A library writing to its caller's output is a small thing that becomes irritating at scale and impossible to route.", "sync"],
+        ["It returns false, which the caller reads as rate limited. The service now denies every request because the component protecting it is unavailable.", "sync"],
+        ["What should happen: return the error alongside the decision and let the caller choose. For a rate limiter the answer is almost always fail open with an alert, because a guard rail that closes the road when it breaks is worse than no guard rail.", "sync"]
+      ] }
+  ],
+
+  api: [
+    ["NewTokenBucket(rate, burst)", "*RateLimiter", "Rate in tokens per second, burst as the ceiling and the starting count. Both parameters are captured once, so no call site can disagree with another."],
+    ["NewSlidingWindow(window, max)", "*RateLimiter", "Same type, the other two fields. That the two constructors fill disjoint halves of one struct is the API's main flaw."],
+    ["TokenBucket(redis, key, requested)", "bool", "One round trip. The requested count is the only reason the two methods have different signatures, which is what stops them sharing an interface."],
+    ["SlidingWindow(redis, key)", "bool", "No requested count, because a window counts requests rather than weight. Symmetry would be worth more than the saved parameter."],
+    ["what it should return", "(Decision, error)", "Allowed, remaining, retry after and an error. All of it is known inside the script and none of it survives the boundary."]
+  ],
+  apiNote: "The Redis client is a parameter rather than a field, which is a good instinct: the library never owns a connection it did not create. It does mean every call site has to carry it, and holding it on the struct would be both simpler and just as polite.",
+
+  schema: { n: "The token bucket, with the two lines that matter marked", lang: "text",
+    note: "Twenty lines of Lua containing the whole idea. Read it as one atomic block, because that is exactly how Redis will run it.",
+    code:
+"local bucket = redis.call('HMGET', key, 'tokens', 'timestamp')\n" +
+"local tokens         = tonumber(bucket[1]) or burst   -- absent key reads\n" +
+"local last_refreshed = tonumber(bucket[2]) or now     -- as a FULL bucket\n" +
+"\n" +
+"-- lazy refill. nothing runs in the background, ever. the bucket is\n" +
+"-- correct at the moment it is observed and untouched otherwise.\n" +
+"local delta = math.max(0, now - last_refreshed)   -- clamped, so a clock\n" +
+"tokens = math.min(burst, tokens + delta * rate)   -- that went backwards\n" +
+"                                                  -- stalls, not rewinds\n" +
+"if tokens < requested then\n" +
+"    return 0                    -- a denial writes NOTHING, so a blocked\n" +
+"else                            -- client cannot keep itself blocked\n" +
+"    tokens = tokens - requested\n" +
+"    redis.call('HMSET', key, 'tokens', tokens, 'timestamp', now)\n" +
+"    redis.call('EXPIRE', key, math.ceil(burst / rate))\n" +
+"    return 1                    -- TTL = the time an empty bucket takes to\n" +
+"end                             -- refill. after that the stored state is\n" +
+"                                -- identical to a fresh key, so expiring\n" +
+"                                -- it loses nothing and idle keys are free\n" +
+"\n" +
+"-- and the one line in the sliding window that is easy to get wrong:\n" +
+"--   member = tostring(now) .. ':' .. uuid\n" +
+"-- a sorted set is a SET. two requests on the same nanosecond with the\n" +
+"-- same member collapse into one entry and the count comes up short." },
+
+  deep: [
+    { n: "Why Lua, and what a Redis transaction cannot do",
+      note: "The requirement is that a read, a decision based on what was read, and a write happen with nothing in between. Redis offers three ways to approach that and only one of them works here.<br><br><b>MULTI and EXEC</b> queue commands and run them together, and that is genuinely atomic. What it cannot do is branch: the commands are decided before any of them has run, so you cannot say <i>read the token count and then subtract only if it is large enough</i>. The decision has to be made outside, before the read has happened.<br><br><b>WATCH</b> adds optimistic concurrency: watch the key, read it, decide, and the transaction aborts if anything else touched the key meanwhile. It is correct, and under contention it is a retry loop, and rate limiting is contended by definition, because the clients you most want to limit are the ones hitting the same key hardest.<br><br><b>EVAL</b> sends the whole algorithm to the server. Redis executes commands one at a time, so a script runs to completion with nothing interleaved, and it can read, branch and write freely. One round trip, no retries, no lock. The cost is that your logic now lives in a language with no types and no test tooling, inside a database, where a long running script blocks every other client. Both scripts here are a handful of commands, which is what makes that price acceptable." },
+
+    { n: "Lazy refill, and a TTL that derives itself",
+      note: "The textbook description of a token bucket has tokens being added on a schedule, and that description quietly implies a process doing the adding. For a million clients that is a million buckets being topped up continuously, almost all of them for clients who are not making requests.<br><br>The observation that removes it entirely: the token count only has to be right at the instant somebody asks. So store the count and the time it was true, and when a request arrives, compute how much time has passed and add that much. The bucket is always correct when observed and nothing touches it in between. No ticker, no scheduler, no work proportional to the number of clients.<br><br>The same reasoning produces the expiry for free, and this is the detail worth stealing. An empty bucket becomes full again after <code>burst / rate</code> seconds. After that long, the stored state and a completely absent key would produce identical answers, because an absent key is read as a full bucket. So the key can be expired at exactly that age and nothing is lost. The TTL is not a guess or a tuning parameter, it is derived from the algorithm's own constants, and it is why idle clients cost nothing and no cleanup job exists." },
+
+    { n: "The UUID in the sorted set member",
+      note: "The sliding window stores one entry per request, scored by timestamp, in a Redis sorted set. The obvious member to use is the timestamp itself. That is wrong, and the way it is wrong is unpleasant: a sorted set is a <i>set</i>, so adding a member that already exists updates its score instead of adding a second entry.<br><br>Two requests that land on the same nanosecond therefore become one entry. The count comes up one short, and the limiter admits one more request than it should. It happens only under genuine concurrency, it is invisible in any single threaded test, and it gets worse as load increases, which is precisely when the limiter matters.<br><br>Making each member unique fixes it, and this code appends a UUID to the timestamp. It works and it is honest about what it costs: most of the bytes in that key are now identifier rather than data, so a limit of a hundred requests holds a hundred UUIDs. A per key counter from Redis would be shorter and equally unique, and would halve the memory of the most expensive structure in the library.<br><br>The general lesson is worth more than the fix: whenever you store events in a set, ask what happens when two events are identical, because in a set they stop being two." },
+
+    { n: "What crosses the boundary, and the failure the caller cannot choose",
+      note: "Inside the script, four facts are known: whether the request is allowed, how many tokens or slots remain, how long until the next one becomes available, and whether Redis answered at all. One bit crosses the boundary.<br><br>Each discarded fact costs the caller something concrete. Without <b>remaining</b>, nobody can be warned that they are close to the limit. Without <b>retry after</b>, a 429 cannot carry the header that tells a client when to come back, so clients retry blindly and make the situation worse. Without the <b>error</b>, a rate limit and a Redis outage are the same value, so the caller cannot log them differently and cannot treat them differently.<br><br>That last one is the serious one. Returning false on a Redis error means the library fails closed, and it makes that choice on behalf of every program that imports it. For a rate limiter the conventional answer is the opposite: fail open, loudly, because a component whose job is to protect a service should never be the reason that service is unavailable. Reasonable people choose differently for a payment endpoint, which is exactly why the choice belongs to the caller.<br><br>The fix is a struct and an error in the signature. It is a breaking change and it is worth a major version, and every one of those four facts is already sitting in a variable inside the script." }
+  ],
+
+  tradeoffsIntro: "Four decisions. The first is the caller's, the second is the library's and is right, and the last two are the library's and are worth changing.",
+
+  tradeoffs: [
+    { a: ["Token bucket", "Constant memory per key. Tolerates bursts by design, which matches how real clients behave."],
+      b: ["Sliding window", "Exact, with no boundary effect. Memory grows with the limit, so heavy users are the expensive ones."],
+      pick: "a",
+      flip: "the requirement is a hard cap that must never be exceeded, for example a contractual quota or a third party API you are reselling. Then exactness is the product and the memory is the price." },
+    { a: ["The algorithm as a Lua script", "One round trip, genuinely atomic, no retries and no locks anywhere."],
+      b: ["WATCH with optimistic retry from the caller", "All the logic stays in Go, with types and tests, and it becomes a retry loop under exactly the contention rate limiting is for."],
+      pick: "a",
+      flip: "the script would be long or would iterate over a large key space, at which point it blocks every other Redis client while it runs. Short scripts only, and both of these are short." },
+    { a: ["Take the time from Redis inside the script", "One clock for every caller. Skew disappears and cannot come back."],
+      b: ["Pass the caller's time in as an argument", "The script stays deterministic, and tests can supply any time they like. Several callers means several clocks that disagree."],
+      pick: "a",
+      flip: "you need the script to be deterministic for verbatim replication, which modern Redis no longer requires because it replicates effects rather than source. Keep an injectable clock for tests, and use the server's in production." },
+    { a: ["Return a decision and an error", "The caller can send Retry-After, can log a near miss, and can decide its own failure policy."],
+      b: ["Return a boolean", "The smallest possible API and nothing to learn. Denied and broken become the same value."],
+      pick: "a",
+      flip: "never, for a library. A program that only ever wants the bit can ignore the rest; a program that needs the rest cannot recover it. The boolean is fine for a private helper and not for something other people import." }
+  ],
+
+  next: [
+    "<b>Two types and a shared interface.</b> The single highest value change: it makes calling the wrong method on the wrong configuration a compile error instead of a silent permanent denial.",
+    "<b>A result type with an error.</b> Retry after, remaining, and the ability for the caller to fail open. All of it already exists inside the script.",
+    "<b>Take the time from Redis.</b> One clock removes a whole class of intermittent, instance specific bug that is close to impossible to diagnose from the outside.",
+    "<b>Send the script by hash.</b> Loading it once and evaluating by SHA saves about six hundred bytes on every request the service ever serves, and the Redis client already has a helper that falls back to sending the source when the server has forgotten it.",
+    "<b>See it in use.</b> The <a href='?p=loadbalancer-lld'>L7 load balancer</a> imports this library and sits it in front of every proxied request, which is where the fail closed behaviour above stops being theoretical."
+  ],
+
+  p: [
+    ["GO", "https://pkg.go.dev/github.com/go-redis/redis/v8#Script", "go-redis Script, EvalSha with a fallback to Eval", "M"],
+    ["GFG", "https://www.geeksforgeeks.org/system-design/rate-limiting-system-design/", "Rate limiting, the algorithms and the trade-offs", "M"],
+    ["HI", "https://www.hellointerview.com/learn/system-design/problem-breakdowns/rate-limiter", "Hello Interview, design a rate limiter", "H"],
+    ["GH", "https://github.com/alicebob/miniredis", "miniredis, an in process Redis with a clock you can move", "E"],
+    ["BB", "https://blog.bytebytego.com/p/ep141-a-cheatsheet-on-system-design", "ByteByteGo, the HLD cheatsheet", "E"]
   ]
 }
 
